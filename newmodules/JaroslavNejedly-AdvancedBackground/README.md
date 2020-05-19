@@ -25,9 +25,11 @@ The list of customizable parameters will appear here (when the implementation is
 
 Examples will be provided when implementation is finalized.
 
-`AdvancedBackground adv = new AdvancedBackground(new double[] {0.1, 0.2, 0.4}, new double[] {0.45, 0.55, 0.65}, new double[] {0.1, 0.05, 0.02}, Vector3d.UnitY);
+```
+AdvancedBackground adv = new AdvancedBackground(new double[] {0.1, 0.2, 0.4}, new double[] {0.45, 0.55, 0.65}, new double[] {0.1, 0.05, 0.02}, Vector3d.UnitY);
 scene.background = adv;
-scene.Sources.Add(adv);`
+scene.Sources.Add(adv);
+```
 
 ### Sample scene script: DemoScene.cs
 
