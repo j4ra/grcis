@@ -24,7 +24,7 @@ scene.Intersectable = root;
 // Background color.
 scene.BackgroundColor = new double[] {0.3, 0.5, 0.65};
 var advBackground = new AdvancedBackground(new double[] { 0.10, 0.22, 0.83 }, new double[] { 0.62, 0.74, 0.89 }, Vector3d.UnitY);
-advBackground.SunDir = new Vector3d(-2, 2.5, 5.0);
+advBackground.SunDir = new Vector3d(-1.1, 2.5, 5.0);
 advBackground.SunIntensity = new double[] {2.4, 2.3, 2.3};
 advBackground.SunSmallness = 450;
 scene.Background = advBackground;
