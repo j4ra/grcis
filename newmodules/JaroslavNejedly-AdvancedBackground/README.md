@@ -2,17 +2,17 @@
 
 <!--- Add images --->
 
-## Author: Jaroslav Nejedlý
+### Author: Jaroslav Nejedlý
 
-## Category: Background
+### Category: Background
 
-## Namespace: JaroslavNejedly
+### Namespace: JaroslavNejedly
 
-## Class Name: AdvancedBackground : IBackground, ILightSource
+### Class Name: AdvancedBackground : IBackground, ILightSource
 
-## ITimeDependent: Not yet... 😉
+### ITimeDependent: Not yet... 😉
 
-## Source file: AdvancedBackground.cs
+### Source file: AdvancedBackground.cs
 
 This extension provides you with nice looking sky (without clouds). The advanced background also implements ILightSource, it is needed for sun rendering. I tried to make all paramteres customizable. And I also provided default values that IMHO look good (or at least I tried to make them look good).
 
@@ -21,7 +21,7 @@ The list of customizable parameters will appear here (when the implementation is
  * 
  * 
 
-## Examples &amp; sample scripts:
+### Examples &amp; sample scripts:
 
 Examples will be provided when implementation is finalized.
 
@@ -31,7 +31,7 @@ scene.background = adv;
 scene.Sources.Add(adv);
 ```
 
-### Sample scene script: DemoScene.cs
+#### Sample scene script: DemoScene.cs
 
 ## Imges &amp; videos
 
