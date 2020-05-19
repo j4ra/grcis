@@ -1,7 +1,9 @@
 using OpenTK;
 using Rendering;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Utilities;
 
 namespace JaroslavNejedly
@@ -12,34 +14,49 @@ namespace JaroslavNejedly
   [Serializable]
   public class AdvancedBackground : IBackground, ILightSource
   {
-    double[] _groundColor;
-    double[] _horizonColor;
-    double[] _skyColor;
+    public double[] GroundColor { get; set; }
+    public double[] HorizonColor { get; set; }
+    public double[] SkyColor { get; set; }
 
-    double[] _sunIntensity;
-
-    Vector3d _sunDir = (new Vector3d(1, 1, 1)).Normalized();
-    Vector3d _upVector = Vector3d.UnitZ;
-
-    public AdvancedBackground(in double[] skyColor, in double[] horizonColor, in double[] groundColor)
+    public double[] SunIntensity { get; set; }
+    public double SunSmallness { get; set; }
+    private Vector3d _sunDir;
+    public Vector3d SunDir
     {
-      if (skyColor.Length != horizonColor.Length || horizonColor.Length != groundColor.Length)
+      get
       {
-        throw new ArgumentException("Color channels disagree.");
+        return _sunDir;
       }
-
-      _groundColor = (double[])groundColor.Clone();
-      _horizonColor = (double[])horizonColor.Clone();
-      _skyColor = (double[])skyColor.Clone();
-
-      _sunIntensity = new double[groundColor.Length];
-      for (int i = 0; i < _sunIntensity.Length; i++)
+      set
       {
-        _sunIntensity[i] = 1.2;
+        _sunDir = value.Normalized();
       }
     }
 
-    public AdvancedBackground(in double[] skyColor, in double[] horizonColor, in double[] groundColor, Vector3d upVector) : this(skyColor, horizonColor, groundColor)
+    Vector3d _upVector = Vector3d.UnitZ;
+
+    public AdvancedBackground(in double[] skyColor, in double[] horizonColor)
+    {
+      if (skyColor.Length != horizonColor.Length)
+      {
+        throw new ArgumentException("Number of color bands disagree.");
+      }
+
+      GroundColor = new double[] { 0.12, 0.08, 0.05 };
+      HorizonColor = (double[])horizonColor.Clone();
+      SkyColor = (double[])skyColor.Clone();
+
+      SunIntensity = new double[skyColor.Length];
+      for (int i = 0; i < SunIntensity.Length; i++)
+      {
+        SunIntensity[i] = 1.2;
+      }
+
+      SunDir = new Vector3d(1, 1, 1);
+      SunSmallness = 400;
+    }
+
+    public AdvancedBackground(in double[] skyColor, in double[] horizonColor, Vector3d upVector) : this(skyColor, horizonColor)
     {
       _upVector = upVector;
     }
@@ -52,36 +69,47 @@ namespace JaroslavNejedly
       double dot = Vector3d.Dot(p1, _upVector);
       if (dot < -0.1)
       {
-        Util.ColorCopy(_groundColor, color);
+        Util.ColorCopy(GroundColor, color);
       }
       else if (dot < 0)
       {
         dot *= -10;
-        Util.ColorCopy(Lerp(_horizonColor, _groundColor, dot), color);
+        Util.ColorCopy(Lerp(HorizonColor, GroundColor, dot), color);
       }
       else
       {
         double param = 1 - dot;
         param *= param;
         param = 1 - param;
-        Util.ColorCopy(Lerp(_horizonColor, _skyColor, param), color);
+        Util.ColorCopy(Lerp(HorizonColor, SkyColor, param), color);
       }
+
+      //Sun
+      double sunParam = Vector3d.Dot(SunDir, p1);
+      if (sunParam < 0)
+      {
+        return 1L;
+      }
+
+      sunParam = Math.Pow(sunParam, SunSmallness);
+
+      Util.ColorAdd(SunIntensity, sunParam, color);
 
       return 1L;
     }
 
     public double[] GetIntensity(Intersection intersection, out Vector3d dir)
     {
-      dir = _sunDir;
-      return _sunIntensity;
+      dir = SunDir;
+      return SunIntensity;
     }
 
-    private double[] Lerp(double[] c0, double[] c1, double param)
+    private double[] Lerp(double[] c0, double[] c1, double t)
     {
       double[] res = new double[c0.Length];
       for (int i = 0; i < c0.Length; i++)
       {
-        res[i] = c0[i] + param * (c1[i] - c0[i]);
+        res[i] = c0[i] + t * (c1[i] - c0[i]);
       }
 
       return res;
