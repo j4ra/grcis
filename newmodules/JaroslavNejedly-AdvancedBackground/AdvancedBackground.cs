@@ -1,9 +1,6 @@
 using OpenTK;
 using Rendering;
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Utilities;
 
 namespace JaroslavNejedly
@@ -156,7 +153,7 @@ namespace JaroslavNejedly
         }
         nightCoeff = sunElev < groundCutoff ? 1.0 : (sunElev + 2 * groundCutoff) / (3 * groundCutoff);
       }
-      Debug.Assert(nightCoeff <= 1.0 && nightCoeff >= 0.0);
+
       return nightColor;
     }
 
