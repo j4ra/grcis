@@ -69,7 +69,7 @@ Uncomment last line in [DemoScene.cs](DemoScene.cs) to see the effect.
 
 For custom preset example you can look at [DemoSceneCustomPreset.cs.](DemoSceneCustomPreset.cs)
 
-If you are using different up vector in your scene you have to set it correctly in the advanced background. The following line changes the default up vector  `background = new AdvancedBackground(Vector3d.UnitZ);` 
+If you are using different up vector in your scene you have to set it correctly in the advanced background. The following line changes the default up vector to be in the Z-direction `background = new AdvancedBackground(Vector3d.UnitZ);` 
 
 #### Sample scene script: DemoScene.cs
 
