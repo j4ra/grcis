@@ -2,6 +2,9 @@ using OpenTK;
 using Rendering;
 using System;
 using Utilities;
+#if LOGGING
+using System.Diagnostics;
+#endif
 
 namespace JaroslavNejedly
 {
@@ -19,14 +22,14 @@ namespace JaroslavNejedly
     /// <summary>
     /// Sun light source of this sky. Add this to your scene light source collection for directional light.
     /// </summary>
-    public SunLight Sun { get; private set; }
+    public virtual SunLight Sun { get; private set; }
 
     /// <summary>
     /// Current setting used to draw the advanced background.
     /// </summary>
     public AdvancedBackgroundPreset CurrentPreset;
 
-    #region Constructors
+#region Constructors
     /// <summary>
     /// Creates an instance of <see cref="AdvancedBackground"/> and sets the current preset as <paramref name="preset"/>
     /// <para/><i>Note: Default up vector is <see cref="Vector3d.UnitY"/></i>
@@ -65,9 +68,11 @@ namespace JaroslavNejedly
     /// </summary>
     public AdvancedBackground() : this(AdvancedBackgroundPreset.Default)
     { }
-    #endregion
+#endregion
 
-    #region IBackground
+#region IBackground
+
+    /// <inheritdoc/>
     public virtual long GetColor(Vector3d p1, double[] color)
     {
       //Create basic sky gradient based on current sun direction, ray direction and up vector.
@@ -135,9 +140,9 @@ namespace JaroslavNejedly
 
       return 1L;
     }
-    #endregion
+#endregion
 
-    #region Private methods
+#region Private methods
 
     private double[] CalcNightColor(double sunElev, out double nightCoeff, in Vector3d p1)
     {
@@ -179,67 +184,78 @@ namespace JaroslavNejedly
       return res;
     }
 
-    private double[] Inverse(double[] c)
-    {
-      double[] res = new double[c.Length];
-      for (int i = 0; i < c.Length; i++)
-      {
-        res[i] = 1 - c[i];
-      }
-
-      return res;
-    }
-
-    #endregion
+#endregion
   }
 
   /// <summary>
   /// Directional light without any falloff. Used by <see cref="AdvancedBackground"/>.
   /// </summary>
+  [Serializable]
   public class SunLight : ILightSource
   {
-    private AdvancedBackgroundPreset? _preset = null;
-    private AdvancedBackground _background = null;
+    protected AdvancedBackgroundPreset? preset = null;
+    protected AdvancedBackground background = null;
 
-    #region Constructors
+#region Constructors
 
+    /// <summary>
+    /// Creates new instance of <see cref="SunLight"/> with default preset.
+    /// </summary>
     public SunLight()
     {
-      _preset = AdvancedBackgroundPreset.Default;
+      preset = AdvancedBackgroundPreset.Default;
     }
 
-    public SunLight(AdvancedBackgroundPreset preset)
+    /// <summary>
+    /// Creates new instance of <see cref="SunLight"/>. The preset parameters are in <paramref name="preset"/>.
+    /// </summary>
+    /// <param name="preset">Preset to be used by this sun light.</param>
+    public SunLight (AdvancedBackgroundPreset preset)
     {
-      _preset = preset;
+      this.preset = preset;
     }
 
-    public SunLight(AdvancedBackground background)
+    /// <summary>
+    /// Creates new instance of <see cref="SunLight"/>. The preset parameters are taken from <paramref name="background"/> parameters.
+    /// </summary>
+    /// <param name="background"></param>
+    public SunLight (AdvancedBackground background)
     {
-      _background = background;
+      this.background = background;
     }
 
     #endregion
 
     #region ILigtSource
+
+    /// <inheritdoc/>
     public Vector3d? position { get; set; }
 
+    /// <inheritdoc/>
     public double[] GetIntensity(Intersection intersection, out Vector3d dir)
     {
-      if (_preset == null)
+      bool usePreset = preset != null;
+      double mul = usePreset ? (double)preset?.SunIntensityMultiplier : background.CurrentPreset.SunIntensityMultiplier;
+      if (mul < 0.0) mul = 0.0;
+      if (mul > 1.0) mul = 1.0;
+
+      if (usePreset)
       {
-        dir = _background.CurrentPreset.SunDirection;
-        return Util.ColorClone(_background.CurrentPreset.SunIntensity, _background.CurrentPreset.SunIntensityMultiplier);
+        dir = (Vector3d)preset?.SunDirection;
+        return Util.ColorClone(preset?.SunIntensity, mul);
       }
 
-      dir = (Vector3d)_preset?.SunDirection;
-      return Util.ColorClone(_preset?.SunIntensity, (double)_preset?.SunIntensityMultiplier);
+      dir = background.CurrentPreset.SunDirection;
+      return Util.ColorClone(background.CurrentPreset.SunIntensity, mul);
     }
+
     #endregion
   }
 
   /// <summary>
   /// Struct holding preset settings for <see cref="AdvancedBackground"/>.
   /// </summary>
+  [Serializable]
   public struct AdvancedBackgroundPreset
   {
     /// <summary>
@@ -314,5 +330,197 @@ namespace JaroslavNejedly
     /// </summary>
     public Vector3d SunDirection { get => _sunDir; set => _sunDir = value.Normalized(); }
     private Vector3d _sunDir;
+
+    /// <summary>
+    /// Mixes to presets using parameter <paramref name="t"/>.
+    /// </summary>
+    /// <param name="p0">Preset to be used when <paramref name="t"/> &lt;= 0</param>
+    /// <param name="p1">Preset to be used when <paramref name="t"/> &gt;= 1</param>
+    /// <param name="t">Mixing amount</param>
+    /// <returns>Interpolated preset parameters</returns>
+    public static AdvancedBackgroundPreset Interpolate (AdvancedBackgroundPreset p0, AdvancedBackgroundPreset p1, double t)
+    {
+      if (t > 1.0)
+        return p1;
+      if (t < 0.0)
+        return p0;
+
+      return new AdvancedBackgroundPreset
+      {
+        OutScatterColor = lerp(p0.OutScatterColor, p1.OutScatterColor),
+        GroundColor = lerp(p0.GroundColor, p1.GroundColor),
+        HorizonColor = lerp(p0.HorizonColor, p1.HorizonColor),
+        InScatterColor = lerp(p0.InScatterColor, p1.InScatterColor),
+        SunTint = lerp(p0.SunTint, p1.SunTint),
+        SunSmallness = p0.SunSmallness + t * (p1.SunSmallness - p0.SunSmallness),
+        SunIntensity = lerp(p0.SunIntensity, p1.SunIntensity),
+        SunDirection = Vector3d.Lerp(p0.SunDirection, p1.SunDirection, t),
+        NightColor = lerp(p0.NightColor, p1.NightColor),
+        SunIntensityMultiplier = p0.SunIntensityMultiplier + t * (p1.SunIntensityMultiplier - p0.SunIntensityMultiplier),
+        NightBackground = p0.NightBackground ?? p1.NightBackground
+      };
+
+      double[] lerp (double[] c0, double[] c1)
+      {
+        double[] res = new double[c0.Length];
+        for (int i = 0; i < c0.Length; i++)
+        {
+          res[i] = c0[i] + t * (c1[i] - c0[i]);
+        }
+
+        return res;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Animated advanced background class. Supports animated parameters.
+  /// </summary>
+  [Serializable]
+  public class AnimatedAdvancedBackground : AdvancedBackground, ITimeDependent
+  {
+    /// <summary>
+    /// Preset at the beggining of the animation
+    /// </summary>
+    public AdvancedBackgroundPreset StartPreset { get; set; }
+
+    /// <summary>
+    /// Preset at the end of the animation
+    /// </summary>
+    public AdvancedBackgroundPreset EndPreset { get; set; }
+
+    /// <summary>
+    /// Function that is used to set sun direction. If null sun direction will be interpolated between <see cref="StartPreset"/> and <see cref="EndPreset"/>.
+    /// </summary>
+    public Func<double, Vector3d> SunDirectionAnimator { get; set; } = null;
+
+    /// <inheritdoc/>
+    public double Start { get; set; }
+
+    /// <inheritdoc/>
+    public double End { get; set; }
+
+    public override SunLight Sun => throw new NotImplementedException("You have to create your own animated sun.");
+
+    /// <inheritdoc/>
+    public object Clone ()
+    {
+      AnimatedAdvancedBackground aab = new AnimatedAdvancedBackground();
+
+      aab.StartPreset = StartPreset;
+      aab.EndPreset = EndPreset;
+      aab.Start = Start;
+      aab.End = End;
+      aab.SunDirectionAnimator = SunDirectionAnimator;
+
+      return aab;
+    }
+
+    protected double time;
+
+    protected virtual void setTime (double newTime)
+    {
+#if DEBUG && LOGGING
+      Debug.WriteLine($"Sky #{getSerial()} setTime({newTime})");
+#endif
+
+      time = newTime;
+      double t = (time - Start) / (End - Start);
+      // change the background parameters
+
+      CurrentPreset = AdvancedBackgroundPreset.Interpolate(StartPreset, EndPreset, t);
+      if (SunDirectionAnimator != null)
+      {
+        CurrentPreset.SunDirection = SunDirectionAnimator(t);
+      }
+    }
+
+    /// <inheritdoc/>
+    public double Time
+    {
+      get => time;
+      set => setTime(value);
+    }
+
+#if DEBUG
+    private static volatile int nextSerial = 0;
+    private readonly int serial = nextSerial++;
+
+    /// <inheritdoc/>
+    public int getSerial () => serial;
+#endif
+  }
+
+  /// <summary>
+  /// Animated sun light (directional light without falloff). Animation is done in the same way as in <see cref="AnimatedAdvancedBackground"/>
+  /// </summary>
+  [Serializable]
+  public class AnimatedSunLight : SunLight, ITimeDependent
+  {
+    /// <summary>
+    /// Preset at the beggining of the animation
+    /// </summary>
+    public AdvancedBackgroundPreset StartPreset { get; set; }
+
+    /// <summary>
+    /// Preset at the end of the animation
+    /// </summary>
+    public AdvancedBackgroundPreset EndPreset { get; set; }
+
+    public Func<double, Vector3d> SunDirectionAnimator { get; set; } = null;
+
+    /// <inheritdoc/>
+    public double Start { get; set; }
+
+    /// <inheritdoc/>
+    public double End { get; set; }
+
+    protected double time;
+
+    /// <inheritdoc/>
+    public double Time
+    {
+      get => time;
+      set => setTime(value);
+    }
+
+    /// <inheritdoc/>
+    public object Clone ()
+    {
+      AnimatedSunLight asl =  new AnimatedSunLight()
+      {
+        Start = Start,
+        End = End,
+      };
+      asl.StartPreset = StartPreset;
+      asl.EndPreset = EndPreset;
+      asl.SunDirectionAnimator = SunDirectionAnimator;
+      return asl;
+    }
+
+    protected virtual void setTime (double newTime)
+    {
+#if DEBUG && LOGGING
+      Debug.WriteLine($"Sun #{getSerial()} setTime({newTime})");
+#endif
+
+      time = newTime;
+      double t = (time - Start) / (End - Start);
+      var p = AdvancedBackgroundPreset.Interpolate(StartPreset, EndPreset, t);
+      if (SunDirectionAnimator != null)
+      {
+        p.SunDirection = SunDirectionAnimator(t);
+      }
+
+      preset = p;
+    }
+
+#if DEBUG
+    private static volatile int nextSerial = 0;
+    private readonly int serial = nextSerial++;
+
+    /// <inheritdoc/>
+    public int getSerial () => serial;
+#endif
   }
 }
