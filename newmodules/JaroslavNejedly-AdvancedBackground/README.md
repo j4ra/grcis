@@ -8,15 +8,11 @@
 
 ### Namespace: JaroslavNejedly
 
-<<<<<<< HEAD
-### Class Name: AdvancedBackground : IBackground, AnimatedAdvancedBackground : AdvancedBackground, ITimeDependent
+### Class Name: 
+ #### AdvancedBackground : IBackground
+ #### AnimatedAdvancedBackground : AdvancedBackground, ITimeDependent
 
 ### ITimeDependent: Yes
-=======
-### Class Name: AdvancedBackground : IBackground
-
-### ITimeDependent: Not yet... 😉
->>>>>>> summer2019-2020
 
 ### Source file: AdvancedBackground.cs
 
@@ -32,25 +28,18 @@ The list of customizable parameters:
  * SunIntensity - This sets the intensity of the sun and it also contros the underlaying light source. Type: `double[]`
  * SunDirection - This controls the position of the sun on the sky. Type: `Vector3d`
  * NightColor - This is the color of the sky when the sun is down (in the night).  Type: `double[]`
-<<<<<<< HEAD
  * SunIntensityMultiplier - This modifies the intensity of the sun light. You might want to lower the value when the sun is down. The value of thos variable is always clamped between 0 and 1. Type: `double`
-=======
- * SunIntensityMultiplier - This modifies the intensity of the sun light. Tou might want to lower the value when the sun is down. Type: `double`
->>>>>>> summer2019-2020
  * NightBackground - *Optional* - This is the reference to `IBackground` object that is used to render the sky during night. You can use this to add [star background.](../JosefPelikan-StarBackground/README.md) Type: `IBackground`
 
 ### Examples &amp; sample scripts:
 
-<<<<<<< HEAD
 #### Static version:
 
-=======
->>>>>>> summer2019-2020
 To use the advanced background simply create it: `var backround = new AdvancedBackground();`. If you don't provide any parameters into the constructor, the advanced background will use the default settings. But don't worry you can change them later by modifying: `background.CurrentPreset`. Then don't forget to add it to the scene: `scene.Background = background;`. Then you can add the sun into scene light source collection: `scene.Sources.Add(background.Sun);`, but this step is optional. If you don't want to add the sun, you might want to disable the sun rendering: `background.CurrentPreset.SunTint = new double[] {0, 0, 0};`.
 
 Basic example:
 
-```
+```C#
 //Don't forget to use correct namespaces
 using JaroslavNejedly;
 
@@ -72,8 +61,8 @@ background.CurrentPreset.SunDirection = new Vector3d(0, 0.1, 1.0);
 See [DemoScene.cs](DemoScene.cs) for exact example.
 
 If you wish to incorporate [the star background](../JosefPelikan-StarBackground/README.md), you can do so by modifying `background.CurrentPreset.NightBackground`:
-```
-using JosefPelikan;
+```C#
+using JosefPelikan; //For StarBackground
 /*
  * SAME CODE AS IN EXAMPLE ABOVE
  */
@@ -86,7 +75,6 @@ For custom preset example you can look at [DemoSceneCustomPreset.cs.](DemoSceneC
 
 If you are using different up vector in your scene you have to set it correctly in the advanced background. The following line changes the default up vector to be in the Z-direction `background = new AdvancedBackground(Vector3d.UnitZ);` 
 
-<<<<<<< HEAD
 ##### Sample scene script: [DemoScene.cs](DemoScene.cs)
 
 ##### Sample scene script with custom preset: [DemoSceneCustomPreset.cs](DemoSceneCustomPreset.cs)
@@ -97,15 +85,15 @@ To created animated background you need to create AnimatedAdvancedBackground obj
 
 To setup the sun light object you need to create it and then pass the same start and end presets:
 
-```
+```C#
 var sun = new AnimatedSunLight();
 sun.StartPreset = startPreset;
 sun.EndPrest = endPreset;
 ```
 
-You can also optionaly use the sun direction interpolation function. **It is important to keep the presets and interpolation function consistent.** The complete example code looks like this:
+You can also optionaly use the sun direction interpolation function. **It is important to keep the presets and interpolation function consistent between background and light objects.** The complete example code looks like this:
 
-```
+```C#
 using JaroslavNejedly;
 using JosefPelikan; //For StarBackground
 
@@ -157,11 +145,6 @@ scene.Sources.Add(sun);
 ```
 
 ##### Sample scene script with animations: [AnimatedDemoScene.cs](AnimatedDemoScene.cs)
-=======
-#### Sample scene script: DemoScene.cs
-
-#### Sample scene script with custom preset: DemoSceneCustomPreset.cs
->>>>>>> summer2019-2020
 
 ## Issues and things to be aware of:
 
@@ -171,7 +154,6 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 
 ## Imges &amp; videos
 
-<<<<<<< HEAD
 ##### Sky background
 
 ![example1](imgs/img1.png)
@@ -192,37 +174,10 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 
 ![example4](imgs/img_night.png)
 
-##### Can incorporate [star background](../JosefPelikan-StarBackground/README.md)
+##### It can incorporate [star background](../JosefPelikan-StarBackground/README.md)
 
 ![example5](imgs/img_morning_with_stars.png)
 
 ##### Custom presets
-=======
-#### Sky background
-
-![example1](imgs/img1.png)
-
-#### With the sun!
-
-![example0](imgs/img0.png)
-
-#### Redish tones of sunrise
-
-![example2](imgs/img_early_morning.png)
-
-#### Morning
-
-![example3](imgs/img_morning.png)
-
-#### Night
-
-![example4](imgs/img_night.png)
-
-#### Can incorporate [star background](../JosefPelikan-StarBackground/README.md)
-
-![example5](imgs/img_morning_with_stars.png)
-
-#### Custom presets
->>>>>>> summer2019-2020
 
 ![example6](imgs/img_custom_preset.png)
