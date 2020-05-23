@@ -1,6 +1,6 @@
 # Extension: Advanced background
 
-<!--- Add images --->
+![example0](imgs/img0.png)
 
 ## Author: Jaroslav Nejedlý
 
@@ -31,10 +31,14 @@ scene.background = adv;
 scene.Sources.Add(adv);
 ```
 
-### Sample scene script: DemoScene.cs
+#### Sample scene script: DemoScene.cs
+
+## Issues and things to be aware of:
+
+The advanced background adds quite a lot of light into the scene. Be aware of that. This might cause some lighting issues. The amount of light provided by the advanced background is substaintial, even if you do not add provided sun light source into the scene.
 
 ## Imges &amp; videos
 
-![example0](img0.png)
+![example0](imgs/img0.png)
 
-![example1](img1.png)
+![example1](imgs/img1.png)
