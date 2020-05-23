@@ -402,6 +402,20 @@ namespace JaroslavNejedly
 
     public override SunLight Sun => throw new NotImplementedException("You have to create your own animated sun.");
 
+    /// <summary>
+    /// Creates new instance of <see cref="AnimatedAdvancedBackground"/>. Also sets the up vector to the value provided in parameter <paramref name="upVector"/>.
+    /// </summary>
+    /// <param name="upVector">The up vector of the scene.</param>
+    public AnimatedAdvancedBackground(Vector3d upVector) : base(upVector)
+    { }
+
+    /// <summary>
+    /// Creates new instance of <see cref="AnimatedAdvancedBackground"/>.
+    /// <para/><i>Note: Uses default upvector <see cref="Vector3d.UnitY"/></i>
+    /// </summary>
+    public AnimatedAdvancedBackground () : base()
+    { }
+
     /// <inheritdoc/>
     public object Clone ()
     {
