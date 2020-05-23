@@ -47,20 +47,25 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 
 ## Imges &amp; videos
 
+#### Sky background.
+
 ![example1](imgs/img1.png)
-Sky background.
+
+#### With the sun!
 
 ![example0](imgs/img0.png)
-With the sun!
+
+#### Redish tones of sunrise.
 
 ![example2](imgs/img_early_morning.png)
-Redish tones of sunrise.
+
+#### Morning.
 
 ![example3](imgs/img_morning.png)
-Morning.
+
+#### Night.
 
 ![example4](imgs/img_night.png)
-Night.
 
+#### Can incorporate [star background.](../JosefPelikan-StarBackground/README.md)
 ![example5](imgs/img_morning_with_stars.png)
-Can incorporate [star background.](../JosefPelikan-StarBackground/README.md)
