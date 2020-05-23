@@ -37,7 +37,7 @@ To use the advanced background simply create it: `var backround = new AdvancedBa
 
 Basic example:
 
-```
+```C#
 //Don't forget to use correct namespaces
 using JaroslavNejedly;
 
@@ -59,8 +59,8 @@ background.CurrentPreset.SunDirection = new Vector3d(0, 0.1, 1.0);
 See [DemoScene.cs](DemoScene.cs) for exact example.
 
 If you wish to incorporate [the star background](../JosefPelikan-StarBackground/README.md), you can do so by modifying `background.CurrentPreset.NightBackground`:
-```
-using JosefPelikan;
+```C#
+using JosefPelikan; //For StarBackground
 /*
  * SAME CODE AS IN EXAMPLE ABOVE
  */
@@ -83,15 +83,15 @@ To created animated background you need to create AnimatedAdvancedBackground obj
 
 To setup the sun light object you need to create it and then pass the same start and end presets:
 
-```
+```C#
 var sun = new AnimatedSunLight();
 sun.StartPreset = startPreset;
 sun.EndPrest = endPreset;
 ```
 
-You can also optionaly use the sun direction interpolation function. **It is important to keep the presets and interpolation function consistent.** The complete example code looks like this:
+You can also optionaly use the sun direction interpolation function. **It is important to keep the presets and interpolation function consistent between background and light objects.** The complete example code looks like this:
 
-```
+```C#
 using JaroslavNejedly;
 using JosefPelikan; //For StarBackground
 
@@ -172,7 +172,7 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 
 ![example4](imgs/img_night.png)
 
-##### Can incorporate [star background](../JosefPelikan-StarBackground/README.md)
+##### It can incorporate [star background](../JosefPelikan-StarBackground/README.md)
 
 ![example5](imgs/img_morning_with_stars.png)
 
