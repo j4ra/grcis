@@ -49,4 +49,4 @@ root.InsertChild(pl, Matrix4d.RotateX(-MathHelper.PiOver2) * Matrix4d.CreateTran
 advBackground.CurrentPreset.SunDirection = new Vector3d(0.6, -0.1, 1.0);
 advBackground.CurrentPreset.SunIntensityMultiplier = 0.1;
 //IT IS POSSIBLE TO INTEGRATE StarBackground when the sun is down.
-//advBackground.CurrentPreset.NightBackground = new JosefPelikan.StarBackground(scene.BackgroundColor, 600, 0.006, 0.5, 1.6, 1.0);
+//advBackground.CurrentPreset.NightBackground = new JosefPelikan.StarBackground(advBackground.CurrentPreset.NightColor);
