@@ -109,4 +109,4 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 
 #### Custom presets
 
-![example5](imgs/img_custom_preset.png)
+![example6](imgs/img_custom_preset.png)
