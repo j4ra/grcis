@@ -52,25 +52,6 @@ if (ascene != null)
   ascene.Start = (double)context[PropertyName.CTX_START_ANIM];
 }
 
-// Background color.
-var startPreset = AdvancedBackgroundPreset.Default;
-var endPreset = AdvancedBackgroundPreset.Default;
-
-startPreset.NightBackground = new JosefPelikan.StarBackground(startPreset.NightColor);
-startPreset.SunIntensityMultiplier = -0.365;
-startPreset.SunDirection = new Vector3d(0.6, -0.1, 1.0);
-
-endPreset.SunIntensityMultiplier = 2.135;
-endPreset.SunDirection = new Vector3d(0.5, 0.6, 0.9);
-
-var advBackground = new AnimatedAdvancedBackground();
-advBackground.StartPreset = startPreset;
-advBackground.EndPreset = endPreset;
-advBackground.Start = (double)context[PropertyName.CTX_START_ANIM];
-advBackground.End = (double)context[PropertyName.CTX_END_ANIM];
-scene.Background = advBackground;
-scene.BackgroundColor = startPreset.NightColor;
-
 // Camera.
 scene.Camera = new StaticCamera(new Vector3d(0.7, 0.5, -5.0),
                                 new Vector3d(0.0, 0.18, 1.0),
@@ -80,11 +61,46 @@ scene.Camera = new StaticCamera(new Vector3d(0.7, 0.5, -5.0),
 scene.Sources = new LinkedList<ILightSource>();
 scene.Sources.Add(new AmbientLightSource(0.8));
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// BACKGROUND:
+//First we create start and end presets. We use the default preset as a default value.
+var startPreset = AdvancedBackgroundPreset.Default;
+var endPreset = AdvancedBackgroundPreset.Default;
+
+//Next we modify the preset to create interesting transition
+startPreset.NightBackground = new JosefPelikan.StarBackground(startPreset.NightColor);
+startPreset.SunIntensityMultiplier = -0.365;
+startPreset.SunDirection = new Vector3d(0.6, -0.1, 1.0);
+
+endPreset.SunIntensityMultiplier = 2.135;
+endPreset.SunDirection = new Vector3d(0.5, 0.6, 0.9);
+
+//Now we create the background object
+var advBackground = new AnimatedAdvancedBackground();
+//We need to apply the presets
+advBackground.StartPreset = startPreset;
+advBackground.EndPreset = endPreset;
+//You can use your own function for interpolating sun direction.
+//advBackground.SunDirectionAnimator = (t) => Vector3d.Lerp(startPreset.SunDirection, endPreset.SunDirection, t);
+//Do not forget to set start and end of your animation!
+advBackground.Start = (double)context[PropertyName.CTX_START_ANIM];
+advBackground.End = (double)context[PropertyName.CTX_END_ANIM];
+//Apply background and background color.
+scene.Background = advBackground;
+scene.BackgroundColor = startPreset.NightColor;
+
+//ANIMATED SUN:
+//First we have to create animated sun object.
 var sun = new AnimatedSunLight();
+//Now we apply the starting and ending presets
 sun.StartPreset = startPreset;
 sun.EndPreset = endPreset;
+//You can use your own function for interpolating sun direction.
+//sun.SunDirectionAnimator = (t) => Vector3d.Lerp(startPreset.SunDirection, endPreset.SunDirection, t);
+//Do not forget to set start and end of your animation!
 sun.End = (double)context[PropertyName.CTX_END_ANIM];
 sun.Start = (double)context[PropertyName.CTX_START_ANIM];
+//Apply the light into the scene.
 scene.Sources.Add(sun);
 
 // --- NODE DEFINITIONS ----------------------------------------------------
