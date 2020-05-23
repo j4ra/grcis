@@ -8,7 +8,9 @@
 
 ### Namespace: JaroslavNejedly
 
-### Class Name: AdvancedBackground : IBackground, AnimatedAdvancedBackground : AdvancedBackground, ITimeDependent
+### Class Name: 
+ #### AdvancedBackground : IBackground
+ #### AnimatedAdvancedBackground : AdvancedBackground, ITimeDependent
 
 ### ITimeDependent: Yes
 
