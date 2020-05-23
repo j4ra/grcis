@@ -28,7 +28,7 @@ The list of customizable parameters:
  * SunIntensity - This sets the intensity of the sun and it also contros the underlaying light source. Type: `double[]`
  * SunDirection - This controls the position of the sun on the sky. Type: `Vector3d`
  * NightColor - This is the color of the sky when the sun is down (in the night).  Type: `double[]`
- * SunIntensityMultiplier - This modifies the intensity of the sun light. You might want to lower the value when the sun is down. The value of thos variable is always clamped between 0 and 1. Type: `double`
+ * SunIntensityMultiplier - This modifies the intensity of the sun light. You might want to lower the value when the sun is down. The value of this variable is always clamped between 0 and 1. Type: `double`
  * NightBackground - *Optional* - This is the reference to `IBackground` object that is used to render the sky during night. You can use this to add [star background.](../JosefPelikan-StarBackground/README.md) Type: `IBackground`
 
 ### Examples &amp; sample scripts:
@@ -181,3 +181,5 @@ Also please beware what is the up direction in your scene. Default value is (0, 
 ##### Custom presets
 
 ![example6](imgs/img_custom_preset.png)
+
+<!-- TODO: Add link to video -->
