@@ -255,10 +255,7 @@ namespace JaroslavNejedly
   /// <summary>
   /// Struct holding preset settings for <see cref="AdvancedBackground"/>.
   /// </summary>
-<<<<<<< HEAD
   [Serializable]
-=======
->>>>>>> summer2019-2020
   public struct AdvancedBackgroundPreset
   {
     /// <summary>
@@ -333,7 +330,6 @@ namespace JaroslavNejedly
     /// </summary>
     public Vector3d SunDirection { get => _sunDir; set => _sunDir = value.Normalized(); }
     private Vector3d _sunDir;
-<<<<<<< HEAD
 
     /// <summary>
     /// Mixes to presets using parameter <paramref name="t"/>.
@@ -540,7 +536,5 @@ namespace JaroslavNejedly
     /// <inheritdoc/>
     public int getSerial () => serial;
 #endif
-=======
->>>>>>> summer2019-2020
   }
 }
