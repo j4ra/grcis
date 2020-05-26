@@ -1,4 +1,5 @@
 ﻿using MathSupport;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OpenTK;
 using Rendering;
 using System;
@@ -6,6 +7,57 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+namespace JaroslavNejedly.Extensions
+{
+  public static class ColorExtensions
+  {
+    public static IEnumerable<double> Add (this IEnumerable<double> input, IEnumerable<double> other)
+    {
+      return input.Zip(other, (c0, c1) => c0 + c1);
+    }
+
+    public static IEnumerable<double> Add (this IEnumerable<double> input, double constant)
+    {
+      return input.Select(c => c + constant);
+    }
+
+    public static IEnumerable<double> Mul (this IEnumerable<double> input, IEnumerable<double> other)
+    {
+      return input.Zip(other, (c0, c1) => c0 * c1);
+    }
+
+    public static IEnumerable<double> Mul (this IEnumerable<double> input, double factor)
+    {
+      return input.Select(c => c * factor);
+    }
+
+    public static IEnumerable<double> Gamma(this IEnumerable<double> input, double gamma)
+    {
+      return input.Select(c => Math.Pow(c, gamma));
+    }
+
+    public static IEnumerable<double> Mix (this IEnumerable<double> input, IEnumerable<double> other, double ratio = 0.5)
+    {
+      return input.Zip(other, (c0, c1) => c0 + ratio * (c1 - c0));
+    }
+
+    public static IEnumerable<double> BrightnessContrast (this IEnumerable<double> input, double brightness, double contrast, double contrastMidpoint = 0.5, double brightnessShift = 0.0)
+    {
+      return input.Select(c => brightnessShift + brightness * (contrastMidpoint + contrast * (c - contrastMidpoint)));
+    }
+
+    public static IEnumerable<double> Invert (this IEnumerable<double> input)
+    {
+      return input.Select(c => 1 - c);
+    }
+
+    public static double[] Finalize (this IEnumerable<double> color)
+    {
+      return color.Select(c => Math.Min(Math.Max(0.0, c), 1.0)).ToArray();
+    }
+  }
+}
 
 namespace JaroslavNejedly
 {
@@ -140,6 +192,93 @@ namespace JaroslavNejedly
       }
 
       return result / ampAcc;
+    }
+  }
+
+  public class VoronoiTexture : Texture3D
+  {
+    private Vector3d[,,] seed;
+    private readonly int res;
+
+    private readonly double maxDist;
+    public VoronoiTexture(int res = 16, int randSeed = 0)
+    {
+      this.res = res;
+      maxDist = 1.0 / res * Math.Sqrt(3);
+
+      Random rand = new Random(randSeed);
+      seed = new Vector3d[res , res , res];
+        for(int x = 0; x < res; x++)
+          for(int y = 0; y < res; y++)
+            for(int z = 0; z < res; z++)
+            {
+              seed[x, y, z] = new Vector3d(
+                  (rand.NextDouble() + x) / res,
+                  (rand.NextDouble() + y) / res,
+                  (rand.NextDouble() + z) / res
+                );
+            }
+    }
+
+    public override long GetTexel (Vector3d texCoord, double[] color)
+    {
+      double value = GetDistance(texCoord);
+      for(int i = 0; i < color.Length; i++)
+      {
+        color[i] = value;
+      }
+      return 2L;
+    }
+
+    private double GetDistance(Vector3d pos)
+    {
+      double x = pos.X - Math.Floor(pos.X);
+      double y = pos.Y - Math.Floor(pos.Y);
+      double z = pos.Z - Math.Floor(pos.Z);
+
+      int xIndex = (int)(x * res) % res;
+      int yIndex = (int)(y * res) % res;
+      int zIndex = (int)(z * res) % res;
+
+      //double cellX = (x / res - xIndex);
+      //double cellY = (y / res - yIndex);
+      //double cellZ = (z / res - zIndex);
+
+      Vector3d cubePos = new Vector3d(x,y,z);
+      double minDist = double.MaxValue;
+      for(int i = xIndex - 1; i < xIndex + 2; i++)
+      for(int j = yIndex - 1; j < yIndex + 2; j++)
+      for(int k = zIndex - 1; k < zIndex + 2; k++)
+          {
+            double temp = Vector3d.DistanceSquared(SampleWraped(i, j, k), cubePos);
+            if (temp < minDist)
+              minDist = temp;
+          }
+
+      return Math.Sqrt(minDist) / maxDist;
+    }
+
+    private Vector3d SampleWraped(int i, int j, int k)
+    {
+      int wrapX, wrapY, wrapZ;
+      Vector3d temp = seed[Wrap(i, out wrapX), Wrap(j, out wrapY), Wrap(k, out wrapZ)];
+      return new Vector3d(temp.X - wrapX, temp.Y - wrapY, temp.Z - wrapZ);
+    }
+
+    private int Wrap(int index, out int wraped)
+    {
+      if (index < 0)
+      {
+        wraped = 1;
+        return index + res;
+      }
+      if (index >= res)
+      {
+        wraped = -1;
+        return index - res;
+      }
+      wraped = 0;
+      return index;
     }
   }
 }
