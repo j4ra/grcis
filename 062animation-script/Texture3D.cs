@@ -52,6 +52,11 @@ namespace JaroslavNejedly.Extensions
       return input.Select(c => 1 - c);
     }
 
+    public static IEnumerable<double> FillFlat(this IEnumerable<double> input, double color)
+    {
+      return input.Select(i => color);
+    }
+
     public static double[] Finalize (this IEnumerable<double> color)
     {
       return color.Select(c => Math.Min(Math.Max(0.0, c), 1.0)).ToArray();
@@ -108,22 +113,22 @@ namespace JaroslavNejedly
       this.minOctave = minOctave;
       this.maxOctave = maxOctave;
 
-      Random rj = new Random((int)randSeed);
-      _seed = new double[res * res];
+      Random rand = new Random((int)randSeed);
+      _seed = new double[res * res * res];
 
-      for(int i = 0; i < res * res; i++)
+      for(int i = 0; i < res * res * res; i++)
       {
-        _seed[i] = rj.NextDouble();
+        _seed[i] = rand.NextDouble();
       }
 
       maxOctaves = (int)Math.Log(res, 2);
-      if (maxOctave > maxOctaves)
-        maxOctave = maxOctaves;
+      if (this.maxOctave > maxOctaves)
+        this.maxOctave = maxOctaves;
     }
 
     public override long GetTexel (Vector3d texCoord, double[] color)
     {
-      double value =  Perlin2D(texCoord.X / 5, texCoord.Y / 5, _seed);
+      double value =  Perlin2D(texCoord.X, texCoord.Y);
       for(int i = 0; i < color.Length; i++)
       {
         color[i] = value;
@@ -132,7 +137,52 @@ namespace JaroslavNejedly
       return (long)value;
     }
 
-    private double Perlin2D(double x, double y, double[] seed)
+    public double Perlin3D (double x, double y, double z)
+    {
+      double result = 0.0;
+      double ampAcc = 0.0;
+      double curAmp = amp;
+
+      x = x - Math.Floor(x);
+      y = y - Math.Floor(y);
+      z = z - Math.Floor(z);
+      int pX = (int)(x * res);
+      int pY = (int)(y * res);
+      int pZ = (int)(z * res);
+
+      for (int i = minOctave; i < maxOctave; i++)
+      {
+        int pitch = res >> i;
+
+        int sampleX0 = (pX / pitch) * pitch;
+        int sampleY0 = (pY / pitch) * pitch;
+        int sampleZ0 = (pZ / pitch) * pitch;
+
+        int sampleX1 = (sampleX0 + pitch) % res;
+        int sampleY1 = (sampleY0 + pitch) % res;
+        int sampleZ1 = (sampleZ0 + pitch) % res;
+
+        double blendX = (x * res - sampleX0) / pitch;
+        double blendY = (y * res - sampleY0) / pitch;
+        double blendZ = (z * res - sampleZ0) / pitch;
+
+        double result0Z0 = _seed[sampleZ0 * res * res + sampleY0 * res + sampleX0] + blendX * (_seed[sampleZ0 * res * res + sampleY0 * res + sampleX1] - _seed[sampleZ0 * res * res + sampleY0 * res + sampleX0]);
+        double result1Z0 = _seed[sampleZ0 * res * res + sampleY1 * res + sampleX0] + blendX * (_seed[sampleZ0 * res * res + sampleY1 * res + sampleX1] - _seed[sampleZ0 * res * res + sampleY1 * res + sampleX0]);
+        double result0Z1 = _seed[sampleZ1 * res * res + sampleY0 * res + sampleX0] + blendX * (_seed[sampleZ1 * res * res + sampleY0 * res + sampleX1] - _seed[sampleZ1 * res * res + sampleY0 * res + sampleX0]);
+        double result1Z1 = _seed[sampleZ1 * res * res + sampleY1 * res + sampleX0] + blendX * (_seed[sampleZ1 * res * res + sampleY1 * res + sampleX1] - _seed[sampleZ1 * res * res + sampleY1 * res + sampleX0]);
+
+        double result0 = result0Z0 + blendY * (result1Z0 - result0Z0);
+        double result1 = result0Z1 + blendY * (result1Z1 - result0Z1);
+
+        result += (result0 + blendZ * (result1 - result0)) * curAmp;
+        ampAcc += curAmp;
+        curAmp /= bias;
+      }
+
+      return result / ampAcc;
+    }
+
+    public double Perlin2D(double x, double y)
     {
       double result = 0.0;
       double ampAcc = 0.0;
@@ -156,8 +206,8 @@ namespace JaroslavNejedly
         double blendX = (x * res - sampleX0) / pitch;
         double blendY = (y * res - sampleY0) / pitch;
 
-        double result0 = seed[sampleY0 * res + sampleX0] + blendX * (seed[sampleY0 * res + sampleX1] - seed[sampleY0 * res + sampleX0]);
-        double result1 = seed[sampleY1 * res + sampleX0] + blendX * (seed[sampleY1 * res + sampleX1] - seed[sampleY1 * res + sampleX0]);
+        double result0 = _seed[sampleY0 * res + sampleX0] + blendX * (_seed[sampleY0 * res + sampleX1] - _seed[sampleY0 * res + sampleX0]);
+        double result1 = _seed[sampleY1 * res + sampleX0] + blendX * (_seed[sampleY1 * res + sampleX1] - _seed[sampleY1 * res + sampleX0]);
 
         result += (result0 + blendY * (result1 - result0)) * curAmp;
         ampAcc += curAmp;
@@ -167,18 +217,15 @@ namespace JaroslavNejedly
       return result / ampAcc;
     }
 
-    private double Perlin1D(double pos, double[] seed, int octaves)
+    public double Perlin1D(double pos)
     {
       double result = 0.0;
       double ampAcc = 0.0;
       double curAmp = amp;
 
-      if (octaves > maxOctaves)
-        octaves = maxOctaves;
-
       int p = (int)(pos * res) % res;
 
-      for(int i = 0; i < octaves; i++)
+      for(int i = minOctave; i < maxOctave; i++)
       {
         int pitch = res >> i;
         int sample0 = (p / pitch) * pitch;
@@ -186,7 +233,7 @@ namespace JaroslavNejedly
 
         double blend = (pos - sample0) / pitch;
 
-        result += (seed[sample0] + blend * (seed[sample1] - seed[sample0])) * curAmp;
+        result += (_seed[sample0] + blend * (_seed[sample1] - _seed[sample0])) * curAmp;
         ampAcc += curAmp;
         curAmp /= bias;
       }
@@ -200,11 +247,9 @@ namespace JaroslavNejedly
     private Vector3d[,,] seed;
     private readonly int res;
 
-    private readonly double maxDist;
     public VoronoiTexture(int res = 16, int randSeed = 0)
     {
-      this.res = res;
-      maxDist = 1.0 / res * Math.Sqrt(3);
+      this.res = res;   
 
       Random rand = new Random(randSeed);
       seed = new Vector3d[res , res , res];
@@ -222,7 +267,7 @@ namespace JaroslavNejedly
 
     public override long GetTexel (Vector3d texCoord, double[] color)
     {
-      double value = GetDistance(texCoord);
+      double value = GetDistance3D(texCoord);
       for(int i = 0; i < color.Length; i++)
       {
         color[i] = value;
@@ -230,8 +275,10 @@ namespace JaroslavNejedly
       return 2L;
     }
 
-    private double GetDistance(Vector3d pos)
+    public double GetDistance3D(Vector3d pos)
     {
+      double maxDist = 1.0 / res * Math.Sqrt(3);
+
       double x = pos.X - Math.Floor(pos.X);
       double y = pos.Y - Math.Floor(pos.Y);
       double z = pos.Z - Math.Floor(pos.Z);
@@ -240,17 +287,13 @@ namespace JaroslavNejedly
       int yIndex = (int)(y * res) % res;
       int zIndex = (int)(z * res) % res;
 
-      //double cellX = (x / res - xIndex);
-      //double cellY = (y / res - yIndex);
-      //double cellZ = (z / res - zIndex);
-
       Vector3d cubePos = new Vector3d(x,y,z);
       double minDist = double.MaxValue;
       for(int i = xIndex - 1; i < xIndex + 2; i++)
       for(int j = yIndex - 1; j < yIndex + 2; j++)
       for(int k = zIndex - 1; k < zIndex + 2; k++)
           {
-            double temp = Vector3d.DistanceSquared(SampleWraped(i, j, k), cubePos);
+            double temp = Vector3d.DistanceSquared(SampleWraped3D(i, j, k), cubePos);
             if (temp < minDist)
               minDist = temp;
           }
@@ -258,11 +301,42 @@ namespace JaroslavNejedly
       return Math.Sqrt(minDist) / maxDist;
     }
 
-    private Vector3d SampleWraped(int i, int j, int k)
+    public double GetDistance2D (Vector2d pos)
+    {
+      double maxDist = 1.0 / res * Math.Sqrt(2);
+
+      double x = pos.X - Math.Floor(pos.X);
+      double y = pos.Y - Math.Floor(pos.Y);
+
+      int xIndex = (int)(x * res) % res;
+      int yIndex = (int)(y * res) % res;
+
+      Vector2d cubePos = new Vector2d(x,y);
+      double minDist = double.MaxValue;
+      for (int i = xIndex - 1; i < xIndex + 2; i++)
+        for (int j = yIndex - 1; j < yIndex + 2; j++)
+        {
+          
+          double temp = Vector2d.DistanceSquared(SampleWraped2D(i, j), cubePos);
+          if (temp < minDist)
+            minDist = temp;
+        }
+
+      return Math.Sqrt(minDist) / maxDist;
+    }
+
+    private Vector3d SampleWraped3D(int i, int j, int k)
     {
       int wrapX, wrapY, wrapZ;
       Vector3d temp = seed[Wrap(i, out wrapX), Wrap(j, out wrapY), Wrap(k, out wrapZ)];
       return new Vector3d(temp.X - wrapX, temp.Y - wrapY, temp.Z - wrapZ);
+    }
+
+    private Vector2d SampleWraped2D (int i, int j)
+    {
+      int wrapX, wrapY;
+      Vector3d temp = seed[Wrap(i, out wrapX), Wrap(j, out wrapY), 0];
+      return new Vector2d(temp.X - wrapX, temp.Y - wrapY);
     }
 
     private int Wrap(int index, out int wraped)

@@ -22,9 +22,9 @@ scene.Sources = new System.Collections.Generic.LinkedList<ILightSource>();
 scene.Sources.Add(new AmbientLightSource(0.8));
 scene.Sources.Add(new PointLightSource(new Vector3d(-5.0, 4.0, -3.0), 75));
 
-scene.Camera = new StaticCamera(new Vector3d(0.7, 2.5, -8.0),
+scene.Camera = new StaticCamera(new Vector3d(0.7, 2.5, -4.0),
                                 new Vector3d(0.0, -0.1, 0.2),
-                                90.0);
+                                60.0);
 
 
 Sphere s;
@@ -32,10 +32,23 @@ s = new Sphere();
 s.SetAttribute(PropertyName.MATERIAL, pm);
 root.InsertChild(s, Matrix4d.Identity);
 s = new Sphere();
+
+var perTex = new PerlinTexture(1, 128, 1.0, 1.2);
+perTex.Mapping = i =>
+{
+    double[] color = new double[i.SurfaceColor.Length];
+
+    color = color.FillFlat(perTex.Perlin3D(i.CoordLocal.X, i.CoordLocal.Y, i.CoordLocal.Z)).BrightnessContrast(1.0, 4.0, 0.5).Finalize();
+    i.SurfaceColor = color;
+    i.textureApplied = true;
+    return 1L;
+};
+
+s.SetAttribute(PropertyName.TEXTURE, perTex);
 root.InsertChild(s, Matrix4d.Scale(1.2) * Matrix4d.CreateTranslation(1.5, 0.2, 2.4));
 Plane pl = new Plane();
 pl.SetAttribute(PropertyName.COLOR, new double[] {0.3, 0.0, 0.0});
-var tex = new PerlinTexture(0, 2048, 1.0, 1.4, 5, 11);
+var tex = new PerlinTexture(0, 256, 1.0, 1.4, 3, 8);
 tex.Mapping = i =>
 {
     double[] color0 = new double[i.SurfaceColor.Length];
@@ -52,12 +65,12 @@ var vorTex = new VoronoiTexture();
 vorTex.Mapping = i =>
 {
     double[] color = new double[i.SurfaceColor.Length];
-    vorTex.GetTexel(new Vector3d(i.TextureCoord.X / 24, i.TextureCoord.Y / 32, 0), color);
-    double[] colorPerl = new double[color.Length];
-    tex.GetTexel(new Vector3d(i.TextureCoord.X / 2, i.TextureCoord.Y / 4, 0), colorPerl);
+    double vorCol = vorTex.GetDistance2D(new Vector2d(i.TextureCoord.X / 32, i.TextureCoord.Y / 24)); 
 
-
-    i.SurfaceColor = color.Invert().Mul(color).Invert().Mul(color).Mul(colorPerl).Invert().BrightnessContrast(1.0, 5, 0.8).Mul(0.65).Finalize();
+    double colorPerl =  tex.Perlin2D(i.TextureCoord.X / 32, i.TextureCoord.Y / 32);
+    
+    i.SurfaceColor = color.FillFlat(colorPerl)//color.FillFlat(vorCol).Invert().Mul(colorPerl)
+                    .Finalize();
     i.textureApplied = true;
     return 1L;
 };
@@ -65,4 +78,5 @@ vorTex.Mapping = i =>
 PhongMaterial shiny = new PhongMaterial(new double[] { 0.05, 0.05, 0.05 }, 0.15, 0.25, 0.6, 128);
 pl.SetAttribute(PropertyName.MATERIAL, shiny);
 pl.SetAttribute(PropertyName.TEXTURE, vorTex);
+//pl.SetAttribute(PropertyName.TEXTURE, perTex);
 root.InsertChild(pl, Matrix4d.RotateX(-MathHelper.PiOver2) * Matrix4d.CreateTranslation(0.0, -1.0, 0.0));
