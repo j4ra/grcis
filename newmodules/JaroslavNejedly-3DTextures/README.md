@@ -21,3 +21,10 @@ Description.
 ### Examples &amp; sample scripts:
 
 Example.
+
+### Issues and things to be aware of:
+
+---
+
+## Color Extensions
+
