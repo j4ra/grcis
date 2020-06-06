@@ -29,7 +29,7 @@ Sphere s = new Sphere();
 Plane pl = new Plane();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Create new perlin texture with random seed 0, resolution of 128x128x128 (2MB). Starting amplitude 1.0 and bias 1.1. See README.md for more info.
+//Create new perlin texture with random seed 0, resolution of 128x128x128 (16MB). Starting amplitude 1.0 and bias 1.1. See README.md for more info.
 var perTex = new PerlinTexture(0, 128, 1.0, 1.1);
 
 //Assign a custom mapping function. The parameter i is Intersection of Ray intersectiong with surface.
@@ -53,7 +53,7 @@ perTex.Mapping = i =>
 //Assign texture to the sphere.
 s.SetAttribute(PropertyName.TEXTURE, perTex);
 
-//Create new Perlin texture. With random seed 2, resolution 256 (16MB), amplitude 1.0 and bias 1.4
+//Create new Perlin texture. With random seed 2, resolution 256 (134MB), amplitude 1.0 and bias 1.4
 var tex = new PerlinTexture(2, 256, 1.0, 1.4);
 //Create new Voronoi texture. With 16x16x16 cells (each cell is 24 bytes) and the random seed is 1.
 var vorTex = new VoronoiTexture(16, 1);

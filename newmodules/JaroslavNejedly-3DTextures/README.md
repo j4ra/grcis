@@ -16,11 +16,53 @@
 
 ### Source file: Texture3D.cs
 
-Description.
+3D noise textures that are very common in different graphical applications. Both Voronoi and Perlin textures are tileable and they tile with period of 1.0.
+
+### Perlin noise
+
+Perlin noise is a noise that is random, yet it is smooth. The sampling of perlin noise is usually done in so called octaves. The higher the octave the less smooth the noise is. The highes octave is just fully random. The lowest octave is single color. The amplitude of higher octaves is lower, which results in smoother look of the texture. The fall off of the amplitude is controlled via the `bias` variable in the constructor. The amplitude is divided by bias for higher octaves.
+
+The constructor takes 4 parameters. The ranom seed, resolution, base amplitude and bias. The base amplitude controls the intensity of the lowest octave that is being used. Bias controls the falloff of the amplitude with higher octaves. Resolution the resolution of highest octave. **Beware!** It is 3D texture, so the resolution is actually cubed, each texel is 8 bytes (e.g. for resolution 128 the size is 16MB and for 256 the size is 134MB). Please use only power of two resolutions. The random seed controls the "version" of the texture, if you use different seed, you get different texture. All 4 parameters have some default values, so you don't have to fill them all.
+
+Perlin texture provides 3 different modes: 1D, 2D, 3D. To Get the value you like use these functions: 
+ - `double Perlin1D(double x, int minOctave, int maxOctave)`
+ - `double Perlin2D(double x, double y, int minOctave, int maxOctave)`
+ - `double Perlin3D(double x, double y, double z, int minOctave, int maxOctave)`
+
+### Voronoi texture
+
+Voronoi texture looks like cells.
+
+The constructor takes 2 parameters. The first is number of cells, the second is random seed. The actual number of cells is cubed, because the texture is 3D. The size of a single cell is 24 bytes (so for the resolution of 16, the size of texture is 100kB). The ranodm seed is used to create  different variants of the voronoi texture.
 
 ### Examples &amp; sample scripts:
 
-Example.
+To use the textures you simply create them using the constructor. To assign the texture to the scene object, use standard `someObj.SetAttribute(PropertyName.TEXTURE, YOUR_TEXTURE);`. For advanced effects you might want to assign custom mapping to the texture. To do so simply assign lambda function to `Mapping` property of the texture. Here is full example:
+
+```C#
+PelrinTexture myTexture = new PerlinTexture(/*seed*/0,/*resolution*/128,/*amplitude*/1.0, /*bias*/1.5);
+
+Sphere s = new Sphere();
+s.SetAttribute(PropertyName.TEXTURE, myTexture);
+
+//Mapping is Func<Intersection, long>
+myTexture.Mapping = i => {
+    //Smaple you texture using Perlin2D function. Note: you can sample other textures as well and combine the results.
+    double perlinColor = myTexture.Perlin2D(i.TextureCoord.X / 4, i.TextureCoord.Y / 4, /*starting octave*/2, /*ending octave*/6);
+
+    //Assign the perlin noise as a greyscale value.
+    i.SurfaceColor = new double[] {perlinColor, perlinColor, perlinColor};
+
+    //Set the texture applied flag.
+    i.textureApplied = true;
+    //return hash for adaptive multisampling
+    return 1L;
+};
+```
+
+For more comlex exaple see: [DemoScene.cs](DemoScene.cs).
+
+#### Sample scene script: [DemoScene.cs](DemoScene.cs)
 
 ### Issues and things to be aware of:
 

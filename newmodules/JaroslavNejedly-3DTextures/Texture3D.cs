@@ -258,7 +258,7 @@ namespace JaroslavNejedly
   {
     private double[] _seed;
 
-    private readonly int res = 512;
+    private readonly int res = 256;
 
     private double amp = 1.0;
     private double bias = 1.4;
@@ -270,7 +270,7 @@ namespace JaroslavNejedly
     /// <param name="res">Resolution of the texture (beware as the memory used is proporitonal to the cube of resolution)</param>
     /// <param name="amp">Amplitude of the first octave.</param>
     /// <param name="bias">The attenuation factor of higher octaves. Amplitude of each higher octave is lower based on this parameter.</param>
-    public PerlinTexture (long seed = 0, int res = 512, double amp = 1.0, double bias = 2.0) : base()
+    public PerlinTexture (long seed = 0, int res = 256, double amp = 1.0, double bias = 2.0) : base()
     {
       this.res = res;
       this.amp = amp;
@@ -306,7 +306,7 @@ namespace JaroslavNejedly
     /// <param name="minOctave">Starting octave.</param>
     /// <param name="maxOctave">Ending octave.</param>
     /// <returns></returns>
-    public double Perlin3D (double x, double y, double z, int minOctave = 0, int maxOctave = 9)
+    public double Perlin3D (double x, double y, double z, int minOctave = 0, int maxOctave = 8)
     {
       int maxOctaves = (int)Math.Log(res, 2);
       if (maxOctave > maxOctaves)
@@ -365,7 +365,7 @@ namespace JaroslavNejedly
     /// <param name="minOctave">Starting octave.</param>
     /// <param name="maxOctave">Ending octave.</param>
     /// <returns></returns>
-    public double Perlin2D(double x, double y, int minOctave = 0, int maxOctave = 18)
+    public double Perlin2D(double x, double y, int minOctave = 0, int maxOctave = 12)
     {
       int maxOctaves = (int)Math.Log(res * res * res, 2);
       maxOctaves = maxOctaves / 2;
@@ -416,7 +416,7 @@ namespace JaroslavNejedly
     /// <param name="minOctave">Starting octave.</param>
     /// <param name="maxOctave">Ending octave.</param>
     /// <returns></returns>
-    public double Perlin1D(double x, int minOctave = 0, int maxOctave = 27)
+    public double Perlin1D(double x, int minOctave = 0, int maxOctave = 24)
     {
       int r = res * res * res;
       int maxOctaves = (int)Math.Log(r, 2);
