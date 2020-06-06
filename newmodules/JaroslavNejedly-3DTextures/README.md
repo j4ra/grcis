@@ -65,7 +65,7 @@ myTexture.Mapping = i => {
 };
 ```
 
-For more comlex exaple see: [DemoScene.cs](DemoScene.cs).
+For more comlex example see: [DemoScene.cs](DemoScene.cs).
 
 #### Sample scene script: [DemoScene.cs](DemoScene.cs)
 
