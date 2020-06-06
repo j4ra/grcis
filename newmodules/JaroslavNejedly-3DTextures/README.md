@@ -22,7 +22,7 @@
 
 Perlin noise is a noise that is random, yet it is smooth. The sampling of perlin noise is usually done in so called octaves. The higher the octave the less smooth the noise is. The highes octave is just fully random. The lowest octave is single color. The amplitude of higher octaves is lower, which results in smoother look of the texture. The fall off of the amplitude is controlled via the `bias` variable in the constructor. The amplitude is divided by bias for higher octaves.
 
-The constructor takes 4 parameters. The ranom seed, resolution, base amplitude and bias. The base amplitude controls the intensity of the lowest octave that is being used. Bias controls the falloff of the amplitude with higher octaves. Resolution the resolution of highest octave. **Beware!** It is 3D texture, so the resolution is actually cubed, each texel is 8 bytes (e.g. for resolution 128 the size is 16MB and for 256 the size is 134MB). Please use only power of two resolutions. The random seed controls the "version" of the texture, if you use different seed, you get different texture. All 4 parameters have some default values, so you don't have to fill them all.
+The constructor takes 4 parameters. The ranom seed, resolution, base amplitude and bias. The base amplitude controls the intensity of the lowest octave that is being used. Bias controls the falloff of the amplitude with higher octaves. Resolution the resolution of highest octave. **Beware!** It is 3D texture, so the resolution is actually cubed, each texel is 8 bytes (e.g. for resolution 128 the size is 16MB and for 256 the size is 128MB). Please use only power of two resolutions. The random seed controls the "version" of the texture, if you use different seed, you get different texture. All 4 parameters have some default values, so you don't have to fill them all.
 
 Perlin texture provides 3 different modes: 1D, 2D, 3D. To Get the value you like use these functions: 
  - `double Perlin1D(double x, int minOctave, int maxOctave)`
@@ -33,7 +33,7 @@ Perlin texture provides 3 different modes: 1D, 2D, 3D. To Get the value you like
 
 Voronoi texture looks like cells.
 
-The constructor takes 2 parameters. The first is number of cells, the second is random seed. The actual number of cells is cubed, because the texture is 3D. The size of a single cell is 24 bytes (so for the resolution of 16, the size of texture is 100kB). The ranodm seed is used to create  different variants of the voronoi texture.
+The constructor takes 2 parameters. The first is number of cells, the second is random seed. The actual number of cells is cubed, because the texture is 3D. The size of a single cell is 24 bytes (so for the resolution of 16, the size of texture is around 100kB). The ranodm seed is used to create  different variants of the voronoi texture.
 
 The Voronoi texture has following sampling modes:
 
