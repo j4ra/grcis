@@ -35,6 +35,11 @@ Voronoi texture looks like cells.
 
 The constructor takes 2 parameters. The first is number of cells, the second is random seed. The actual number of cells is cubed, because the texture is 3D. The size of a single cell is 24 bytes (so for the resolution of 16, the size of texture is 100kB). The ranodm seed is used to create  different variants of the voronoi texture.
 
+The Voronoi texture has following sampling modes:
+
+- `double GetDistance2D(Vector2d)`
+- `double GetDistance3D(Vector3d)`
+
 ### Examples &amp; sample scripts:
 
 To use the textures you simply create them using the constructor. To assign the texture to the scene object, use standard `someObj.SetAttribute(PropertyName.TEXTURE, YOUR_TEXTURE);`. For advanced effects you might want to assign custom mapping to the texture. To do so simply assign lambda function to `Mapping` property of the texture. Here is full example:
