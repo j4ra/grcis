@@ -6,69 +6,151 @@ using System.Linq;
 
 namespace JaroslavNejedly.Extensions
 {
+  /// <summary>
+  /// Extension functions for IEnumerable&lt;double&gt;
+  /// </summary>
   public static class ColorExtensions
   {
+    /// <summary>
+    /// Converts double into IEnumerable&lt;double&gt; containing only one element (itself)
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     public static IEnumerable<double> AsColor(this double input)
     {
       yield return input;
     }
 
+    /// <summary>
+    /// Converts IEnumerable&lt;double&gt; back to double. Uses the first element of the collection. 
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     public static double AsFactor(this IEnumerable<double> input)
     {
       return input.FirstOrDefault();
     }
 
+    /// <summary>
+    /// Adds two colors together.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Add (this IEnumerable<double> input, IEnumerable<double> other)
     {
       return input.Zip(other, (c0, c1) => c0 + c1);
     }
 
+    /// <summary>
+    /// Adds constant to all bands of the color.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="constant"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Add (this IEnumerable<double> input, double constant)
     {
       return input.Select(c => c + constant);
     }
 
+    /// <summary>
+    /// Multiplies two color band by band.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Mul (this IEnumerable<double> input, IEnumerable<double> other)
     {
       return input.Zip(other, (c0, c1) => c0 * c1);
     }
 
+    /// <summary>
+    /// Multiplies color by factor
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="factor"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Mul (this IEnumerable<double> input, double factor)
     {
       return input.Select(c => c * factor);
     }
 
+    /// <summary>
+    /// Multiplies color by saturated factor
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="factor"></param>
+    /// <returns></returns>
     public static IEnumerable<double> MulSaturated (this IEnumerable<double> input, double factor)
     {
       double f = Math.Min(1.0, Math.Max(0.0, factor));
       return input.Select(c => c * f);
     }
 
+    /// <summary>
+    /// Applies gamma to the color
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="gamma"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Gamma(this IEnumerable<double> input, double gamma)
     {
       return input.Select(c => Math.Pow(c, gamma));
     }
 
+    /// <summary>
+    /// Mixes two colors together according to <paramref name="ratio"/>
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="other"></param>
+    /// <param name="ratio"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Mix (this IEnumerable<double> input, IEnumerable<double> other, double ratio = 0.5)
     {
       return input.Zip(other, (c0, c1) => c0 + ratio * (c1 - c0));
     }
 
+    /// <summary>
+    /// Changes brightness and contrast.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="brightness"></param>
+    /// <param name="contrast"></param>
+    /// <param name="contrastMidpoint">value unaffected by contrast changes</param>
+    /// <param name="brightnessShift">Additive constant</param>
+    /// <returns></returns>
     public static IEnumerable<double> BrightnessContrast (this IEnumerable<double> input, double brightness, double contrast, double contrastMidpoint = 0.5, double brightnessShift = 0.0)
     {
       return input.Select(c => brightnessShift + brightness * (contrastMidpoint + contrast * (c - contrastMidpoint)));
     }
 
+    /// <summary>
+    /// Creates negative color.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     public static IEnumerable<double> Invert (this IEnumerable<double> input)
     {
       return input.Select(c => 1 - c);
     }
 
+    /// <summary>
+    /// Fills all bands of color with the value of <paramref name="color"/>.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="color"></param>
+    /// <returns></returns>
     public static IEnumerable<double> FillFlat(this IEnumerable<double> input, double color)
     {
       return input.Select(i => color);
     }
 
+    /// <summary>
+    /// Basic color ramp. Based on factor it mixes values from <paramref name="colors"/> parameter.
+    /// </summary>
+    /// <param name="factor"></param>
+    /// <param name="colors"></param>
+    /// <returns></returns>
     public static IEnumerable<double> ColorRamp(double factor, params IEnumerable<double>[] colors)
     {
       if (colors.Length < 2)
@@ -88,15 +170,23 @@ namespace JaroslavNejedly.Extensions
       return colors[c0].Mix(colors[c1], mixFactor);
     }
 
+    /// <summary>
+    /// Converts IEnumerable&lt;double&gt; into array and saturates all bands to range 0.0 and 1.0
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns></returns>
     public static double[] Finalize (this IEnumerable<double> color)
     {
       return color.Select(c => Math.Min(Math.Max(0.0, c), 1.0)).ToArray();
     }
 
-
-    //////////////////////////////
-    //https://stackoverflow.com/questions/1335426/is-there-a-built-in-c-net-system-api-for-hsv-to-rgb
-    //////////////////////////////
+    /// <summary>
+    /// Creates color from HSV. Addapted from <a href="https://stackoverflow.com/questions/1335426/is-there-a-built-in-c-net-system-api-for-hsv-to-rgb">stack overflow</a>.
+    /// </summary>
+    /// <param name="hue"></param>
+    /// <param name="saturation"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
     public static double[] ColorFromHSV (double hue, double saturation, double value)
     {
       int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
@@ -126,8 +216,14 @@ namespace JaroslavNejedly.Extensions
 
 namespace JaroslavNejedly
 {
+  /// <summary>
+  /// Abstract class representing 3D texture.
+  /// </summary>
   public abstract class Texture3D : ITexture
   {
+    /// <summary>
+    /// Mapping function. It takes <see cref="Intersection"/> as an argument, modifies it and returns hash code, that is used for adaptive multisampling.
+    /// </summary>
     public virtual Func<Intersection, long> Mapping { get; set; }
 
     public Texture3D()
@@ -140,32 +236,47 @@ namespace JaroslavNejedly
       };
     }
 
+    /// <inheritdoc/>
     public virtual long Apply (Intersection inter)
     {
        return Mapping(inter);
     }
 
+    /// <summary>
+    /// Basic implementation of 3d texture sample. (Used by default <see cref="Mapping"/>).
+    /// </summary>
+    /// <param name="texCoord"></param>
+    /// <param name="color"></param>
+    /// <returns></returns>
     public abstract long GetTexel (Vector3d texCoord, double[] color);
   }
 
+  /// <summary>
+  /// Perlin texture implementation.
+  /// </summary>
   public class PerlinTexture : Texture3D
   {
     private double[] _seed;
 
-    private long randSeed = 0;
-    private int res = 512;
+    private readonly int res = 512;
 
     private double amp = 1.0;
     private double bias = 1.4;
 
-    public PerlinTexture(long seed = 0, int res = 512, double amp = 1.0, double bias = 2.0) : base()
+    /// <summary>
+    /// Creates an iunstance of Perlin texture.
+    /// </summary>
+    /// <param name="seed">Random generator seed. Use same seed for same results.</param>
+    /// <param name="res">Resolution of the texture (beware as the memory used is proporitonal to the cube of resolution)</param>
+    /// <param name="amp">Amplitude of the first octave.</param>
+    /// <param name="bias">The attenuation factor of higher octaves. Amplitude of each higher octave is lower based on this parameter.</param>
+    public PerlinTexture (long seed = 0, int res = 512, double amp = 1.0, double bias = 2.0) : base()
     {
-      randSeed = seed;
       this.res = res;
       this.amp = amp;
       this.bias = bias;
 
-      Random rand = new Random((int)randSeed);
+      Random rand = new Random((int)seed);
       _seed = new double[res * res * res];
 
       for(int i = 0; i < res * res * res; i++)
@@ -174,6 +285,7 @@ namespace JaroslavNejedly
       }
     }
 
+    /// <inheritdoc/>
     public override long GetTexel (Vector3d texCoord, double[] color)
     {
       double value =  Perlin2D(texCoord.X, texCoord.Y);
@@ -185,6 +297,15 @@ namespace JaroslavNejedly
       return (long)value;
     }
 
+    /// <summary>
+    /// Smaples the 3D perlin nosie at a position <paramref name="x"/>, <paramref name="y"/>, <paramref name="z"/>.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="z"></param>
+    /// <param name="minOctave">Starting octave.</param>
+    /// <param name="maxOctave">Ending octave.</param>
+    /// <returns></returns>
     public double Perlin3D (double x, double y, double z, int minOctave = 0, int maxOctave = 9)
     {
       int maxOctaves = (int)Math.Log(res, 2);
@@ -236,6 +357,14 @@ namespace JaroslavNejedly
       return result / ampAcc;
     }
 
+    /// <summary>
+    /// Smaples the 2D perlin nosie at a position <paramref name="x"/>, <paramref name="y"/>.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="minOctave">Starting octave.</param>
+    /// <param name="maxOctave">Ending octave.</param>
+    /// <returns></returns>
     public double Perlin2D(double x, double y, int minOctave = 0, int maxOctave = 18)
     {
       int maxOctaves = (int)Math.Log(res * res * res, 2);
@@ -280,6 +409,13 @@ namespace JaroslavNejedly
       return result / ampAcc;
     }
 
+    /// <summary>
+    /// Smaples the 1D perlin nosie at a position <paramref name="x"/>.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="minOctave">Starting octave.</param>
+    /// <param name="maxOctave">Ending octave.</param>
+    /// <returns></returns>
     public double Perlin1D(double x, int minOctave = 0, int maxOctave = 27)
     {
       int r = res * res * res;
@@ -293,7 +429,8 @@ namespace JaroslavNejedly
       double ampAcc = 0.0;
       double curAmp = amp;
 
-      int pX = (int)(x * r) % r;
+      x = x - Math.Floor(x);
+      int pX = (int)(x * r);
 
       for(int i = minOctave; i < maxOctave; i++)
       {
@@ -301,7 +438,7 @@ namespace JaroslavNejedly
         int sample0 = (pX / pitch) * pitch;
         int sample1 = (sample0 + pitch) % r;
 
-        double blend = (x - sample0) / pitch;
+        double blend = (x * r - sample0) / pitch;
 
         result += (SampleNoise1D(sample0) + blend * (SampleNoise1D(sample1) - SampleNoise1D(sample0))) * curAmp;
         ampAcc += curAmp;
@@ -338,11 +475,19 @@ namespace JaroslavNejedly
 
   }
 
+  /// <summary>
+  /// Voronoi texture implementation.
+  /// </summary>
   public class VoronoiTexture : Texture3D
   {
     private Vector3d[,,] seed;
     private readonly int res;
 
+    /// <summary>
+    /// Creates instance of voronoi texture.
+    /// </summary>
+    /// <param name="res">Determines the number of cells.</param>
+    /// <param name="randSeed">Random seed. Use same seed for same results.</param>
     public VoronoiTexture(int res = 16, int randSeed = 0)
     {
       this.res = res;   
@@ -361,6 +506,7 @@ namespace JaroslavNejedly
             }
     }
 
+    /// <inheritdoc/>
     public override long GetTexel (Vector3d texCoord, double[] color)
     {
       double value = GetDistance3D(texCoord);
@@ -371,6 +517,11 @@ namespace JaroslavNejedly
       return 2L;
     }
 
+    /// <summary>
+    /// Sample 3D voronoi texture at a position defined by <paramref name="pos"/> parameter.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
     public double GetDistance3D(Vector3d pos)
     {
       double maxDist = 1.0 / res * Math.Sqrt(3);
@@ -397,6 +548,11 @@ namespace JaroslavNejedly
       return Math.Sqrt(minDist) / maxDist;
     }
 
+    /// <summary>
+    /// Sample 2D voronoi texture at a position defined by <paramref name="pos"/> parameter.
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
     public double GetDistance2D (Vector2d pos)
     {
       double maxDist = 1.0 / res * Math.Sqrt(2);
