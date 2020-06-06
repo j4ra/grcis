@@ -75,15 +75,15 @@ Additionally there are functions that do not operate on `IEnumerable<double>`:
 
 ##### 1D Perlin High Octaves
 
-![perlin 1D high octaves](imgs/Pelrin1DPerlin1DHighOctaves.png)
+![perlin 1D high octaves](imgs/Pelrin1DHighOctaves.png)
 
 ##### 2D Perlin Low Octaves
 
-![perlin 1D low octaves](imgs/Pelrin2DLowOctaves.png)
+![perlin 2D low octaves](imgs/Pelrin2DLowOctaves.png)
 
 ##### 2D Perlin High Octaves
 
-![perlin 1D high octaves](imgs/Pelrin1DPerlin2DHighOctaves.png)
+![perlin 2D high octaves](imgs/Perlin2DHighOctaves.png)
 
 ##### 3D Perlin (single slice)
 
