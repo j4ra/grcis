@@ -95,7 +95,8 @@ Additionally there are functions that do not operate on `IEnumerable<double>`:
 
 ##### 3D Voronoi
 
-![3D voronoi](imgs/Voronoi3D.png)
+![3D voronoi](imgs/voronoi3D.png)
+
 Notice how the cells from "above" influences the texture in comparison with the 2D version.
 
 ##### By using clever mapping we can simulate different materials.
