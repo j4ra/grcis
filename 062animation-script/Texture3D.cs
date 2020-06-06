@@ -1,17 +1,23 @@
-﻿using MathSupport;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using OpenTK;
+﻿using OpenTK;
 using Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JaroslavNejedly.Extensions
 {
   public static class ColorExtensions
   {
+    public static IEnumerable<double> AsColor(this double input)
+    {
+      yield return input;
+    }
+
+    public static double AsFactor(this IEnumerable<double> input)
+    {
+      return input.FirstOrDefault();
+    }
+
     public static IEnumerable<double> Add (this IEnumerable<double> input, IEnumerable<double> other)
     {
       return input.Zip(other, (c0, c1) => c0 + c1);
@@ -30,6 +36,12 @@ namespace JaroslavNejedly.Extensions
     public static IEnumerable<double> Mul (this IEnumerable<double> input, double factor)
     {
       return input.Select(c => c * factor);
+    }
+
+    public static IEnumerable<double> MulSaturated (this IEnumerable<double> input, double factor)
+    {
+      double f = Math.Min(1.0, Math.Max(0.0, factor));
+      return input.Select(c => c * f);
     }
 
     public static IEnumerable<double> Gamma(this IEnumerable<double> input, double gamma)
@@ -57,16 +69,63 @@ namespace JaroslavNejedly.Extensions
       return input.Select(i => color);
     }
 
+    public static IEnumerable<double> ColorRamp(double factor, params IEnumerable<double>[] colors)
+    {
+      if (colors.Length < 2)
+        return colors.FirstOrDefault();
+
+      factor = Math.Min(Math.Max(factor, 0.0), 1.0);
+
+      int steps = (colors.Length - 1);
+      double stepSize = 1.0 / steps;
+      int c0 = (int)(factor * steps);
+      int c1 = c0 + 1;
+
+      if (c1 >= colors.Length)
+        return colors[c0];
+
+      double mixFactor = (factor - (c0 * stepSize)) / stepSize;
+      return colors[c0].Mix(colors[c1], mixFactor);
+    }
+
     public static double[] Finalize (this IEnumerable<double> color)
     {
       return color.Select(c => Math.Min(Math.Max(0.0, c), 1.0)).ToArray();
+    }
+
+
+    //////////////////////////////
+    //https://stackoverflow.com/questions/1335426/is-there-a-built-in-c-net-system-api-for-hsv-to-rgb
+    //////////////////////////////
+    public static double[] ColorFromHSV (double hue, double saturation, double value)
+    {
+      int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+      double f = hue / 60 - Math.Floor(hue / 60);
+
+      value = value * 255;
+      int v = Convert.ToInt32(value);
+      int p = Convert.ToInt32(value * (1 - saturation));
+      int q = Convert.ToInt32(value * (1 - f * saturation));
+      int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
+
+      if (hi == 0)
+        return new double[] { v / 255.0, t / 255.0, p / 255.0 };
+      else if (hi == 1)
+        return new double[] { q / 255.0, v / 255.0, p / 255.0 };
+      else if (hi == 2)
+        return new double[] { p / 255.0, v / 255.0, t / 255.0 };
+      else if (hi == 3)
+        return new double[] { p / 255.0, q / 255.0, v / 255.0 };
+      else if (hi == 4)
+        return new double[] { t / 255.0, p / 255.0, v / 255.0 };
+      else
+        return new double[] { v / 255.0, p / 255.0, q / 255.0 };
     }
   }
 }
 
 namespace JaroslavNejedly
 {
-
   public abstract class Texture3D : ITexture
   {
     public virtual Func<Intersection, long> Mapping { get; set; }
@@ -81,8 +140,6 @@ namespace JaroslavNejedly
       };
     }
 
-    public virtual Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
-
     public virtual long Apply (Intersection inter)
     {
        return Mapping(inter);
@@ -93,25 +150,20 @@ namespace JaroslavNejedly
 
   public class PerlinTexture : Texture3D
   {
-    private static double[] _seed;
+    private double[] _seed;
 
     private long randSeed = 0;
     private int res = 512;
-    private int maxOctaves;
-    private int maxOctave;
-    private int minOctave;
 
     private double amp = 1.0;
     private double bias = 1.4;
 
-    public PerlinTexture(long seed = 0, int res = 512, double amp = 1.0, double bias = 2.0, int minOctave = 0, int maxOctave = 9) : base()
+    public PerlinTexture(long seed = 0, int res = 512, double amp = 1.0, double bias = 2.0) : base()
     {
       randSeed = seed;
       this.res = res;
       this.amp = amp;
       this.bias = bias;
-      this.minOctave = minOctave;
-      this.maxOctave = maxOctave;
 
       Random rand = new Random((int)randSeed);
       _seed = new double[res * res * res];
@@ -120,10 +172,6 @@ namespace JaroslavNejedly
       {
         _seed[i] = rand.NextDouble();
       }
-
-      maxOctaves = (int)Math.Log(res, 2);
-      if (this.maxOctave > maxOctaves)
-        this.maxOctave = maxOctaves;
     }
 
     public override long GetTexel (Vector3d texCoord, double[] color)
@@ -137,8 +185,14 @@ namespace JaroslavNejedly
       return (long)value;
     }
 
-    public double Perlin3D (double x, double y, double z)
+    public double Perlin3D (double x, double y, double z, int minOctave = 0, int maxOctave = 9)
     {
+      int maxOctaves = (int)Math.Log(res, 2);
+      if (maxOctave > maxOctaves)
+      {
+        maxOctave = maxOctaves;
+      }
+
       double result = 0.0;
       double ampAcc = 0.0;
       double curAmp = amp;
@@ -166,10 +220,10 @@ namespace JaroslavNejedly
         double blendY = (y * res - sampleY0) / pitch;
         double blendZ = (z * res - sampleZ0) / pitch;
 
-        double result0Z0 = _seed[sampleZ0 * res * res + sampleY0 * res + sampleX0] + blendX * (_seed[sampleZ0 * res * res + sampleY0 * res + sampleX1] - _seed[sampleZ0 * res * res + sampleY0 * res + sampleX0]);
-        double result1Z0 = _seed[sampleZ0 * res * res + sampleY1 * res + sampleX0] + blendX * (_seed[sampleZ0 * res * res + sampleY1 * res + sampleX1] - _seed[sampleZ0 * res * res + sampleY1 * res + sampleX0]);
-        double result0Z1 = _seed[sampleZ1 * res * res + sampleY0 * res + sampleX0] + blendX * (_seed[sampleZ1 * res * res + sampleY0 * res + sampleX1] - _seed[sampleZ1 * res * res + sampleY0 * res + sampleX0]);
-        double result1Z1 = _seed[sampleZ1 * res * res + sampleY1 * res + sampleX0] + blendX * (_seed[sampleZ1 * res * res + sampleY1 * res + sampleX1] - _seed[sampleZ1 * res * res + sampleY1 * res + sampleX0]);
+        double result0Z0 = SampleNoise3D(sampleZ0, sampleY0, sampleX0) + blendX * (SampleNoise3D(sampleZ0, sampleY0, sampleX1) - SampleNoise3D(sampleZ0, sampleY0, sampleX0));
+        double result1Z0 = SampleNoise3D(sampleZ0, sampleY1, sampleX0) + blendX * (SampleNoise3D(sampleZ0, sampleY1, sampleX1) - SampleNoise3D(sampleZ0, sampleY1, sampleX0));
+        double result0Z1 = SampleNoise3D(sampleZ1, sampleY0, sampleX0) + blendX * (SampleNoise3D(sampleZ1, sampleY0, sampleX1) - SampleNoise3D(sampleZ1, sampleY0, sampleX0));
+        double result1Z1 = SampleNoise3D(sampleZ1, sampleY1, sampleX0) + blendX * (SampleNoise3D(sampleZ1, sampleY1, sampleX1) - SampleNoise3D(sampleZ1, sampleY1, sampleX0));
 
         double result0 = result0Z0 + blendY * (result1Z0 - result0Z0);
         double result1 = result0Z1 + blendY * (result1Z1 - result0Z1);
@@ -182,32 +236,41 @@ namespace JaroslavNejedly
       return result / ampAcc;
     }
 
-    public double Perlin2D(double x, double y)
+    public double Perlin2D(double x, double y, int minOctave = 0, int maxOctave = 18)
     {
+      int maxOctaves = (int)Math.Log(res * res * res, 2);
+      maxOctaves = maxOctaves / 2;
+      if (maxOctave > maxOctaves)
+      {
+        maxOctave = maxOctaves;
+      }
+
+      int r = (int)Math.Pow(2, maxOctaves);
+
       double result = 0.0;
       double ampAcc = 0.0;
       double curAmp = amp;
 
       x = x - Math.Floor(x);
       y = y - Math.Floor(y);
-      int pX = (int)(x * res);
-      int pY = (int)(y * res);
+      int pX = (int)(x * r);
+      int pY = (int)(y * r);
 
       for (int i = minOctave; i < maxOctave; i++)
       {
-        int pitch = res >> i;
+        int pitch = r >> i;
 
         int sampleX0 = (pX / pitch) * pitch;
         int sampleY0 = (pY / pitch) * pitch;
 
-        int sampleX1 = (sampleX0 + pitch) % res;
-        int sampleY1 = (sampleY0 + pitch) % res;
+        int sampleX1 = (sampleX0 + pitch) % r;
+        int sampleY1 = (sampleY0 + pitch) % r;
 
-        double blendX = (x * res - sampleX0) / pitch;
-        double blendY = (y * res - sampleY0) / pitch;
+        double blendX = (x * r - sampleX0) / pitch;
+        double blendY = (y * r - sampleY0) / pitch;
 
-        double result0 = _seed[sampleY0 * res + sampleX0] + blendX * (_seed[sampleY0 * res + sampleX1] - _seed[sampleY0 * res + sampleX0]);
-        double result1 = _seed[sampleY1 * res + sampleX0] + blendX * (_seed[sampleY1 * res + sampleX1] - _seed[sampleY1 * res + sampleX0]);
+        double result0 = SampleNoise2D(sampleX0, sampleY0, r) + blendX * (SampleNoise2D(sampleX1, sampleY0, r) - SampleNoise2D(sampleX0, sampleY0, r));
+        double result1 = SampleNoise2D(sampleX0, sampleY1, r) + blendX * (SampleNoise2D(sampleX1, sampleY1, r) - SampleNoise2D(sampleX0, sampleY1, r));
 
         result += (result0 + blendY * (result1 - result0)) * curAmp;
         ampAcc += curAmp;
@@ -217,29 +280,62 @@ namespace JaroslavNejedly
       return result / ampAcc;
     }
 
-    public double Perlin1D(double pos)
+    public double Perlin1D(double x, int minOctave = 0, int maxOctave = 27)
     {
+      int r = res * res * res;
+      int maxOctaves = (int)Math.Log(r, 2);
+      if (maxOctave > maxOctaves)
+      {
+        maxOctave = maxOctaves;
+      }
+
       double result = 0.0;
       double ampAcc = 0.0;
       double curAmp = amp;
 
-      int p = (int)(pos * res) % res;
+      int pX = (int)(x * r) % r;
 
       for(int i = minOctave; i < maxOctave; i++)
       {
-        int pitch = res >> i;
-        int sample0 = (p / pitch) * pitch;
-        int sample1 = (sample0 + pitch) % res;
+        int pitch = r >> i;
+        int sample0 = (pX / pitch) * pitch;
+        int sample1 = (sample0 + pitch) % r;
 
-        double blend = (pos - sample0) / pitch;
+        double blend = (x - sample0) / pitch;
 
-        result += (_seed[sample0] + blend * (_seed[sample1] - _seed[sample0])) * curAmp;
+        result += (SampleNoise1D(sample0) + blend * (SampleNoise1D(sample1) - SampleNoise1D(sample0))) * curAmp;
         ampAcc += curAmp;
         curAmp /= bias;
       }
 
       return result / ampAcc;
     }
+
+    private double SampleNoise3D(int x, int y, int z)
+    {
+      x = (x + res) % res;
+      y = (y + res) % res;
+      z = (z + res) % res;
+
+      return _seed[x + y * res + z * res * res];
+    }
+
+    private double SampleNoise2D (int x, int y, int r)
+    {
+      x = (x + r) % r;
+      y = (y + r) % r;
+
+      return _seed[x + y * r];
+    }
+
+    private double SampleNoise1D (int x)
+    {
+      int r = res * res * res;
+      x = (x + r) % r;
+
+      return _seed[x];
+    }
+
   }
 
   public class VoronoiTexture : Texture3D
