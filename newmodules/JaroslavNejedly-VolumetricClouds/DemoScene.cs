@@ -18,7 +18,7 @@ scene.Background = new DefaultBackground(scene);
 scene.BackgroundColor = new double[] {0.4, 0.6, 0.9};
 
 scene.Sources = new System.Collections.Generic.LinkedList<ILightSource>();
-scene.Sources.Add(new AmbientLightSource(0.8));
+scene.Sources.Add(new AmbientLightSource(0.1));
 scene.Sources.Add(new PointLightSource(new Vector3d(-0.25, 0.55, 0.75), 1.5));
 
 scene.Camera = new StaticCamera(new Vector3d(0.7, 3.5, -6.0),
@@ -28,12 +28,14 @@ scene.Camera = new StaticCamera(new Vector3d(0.7, 3.5, -6.0),
 Cube c = new Cube();
 Plane pl = new Plane();
 
-c.SetAttribute(PropertyName.RECURSION, VolumetricClouds.rf);
+var volClouds = new VolumetricClouds(scene);
+
+c.SetAttribute(PropertyName.RECURSION, volClouds.rf);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Crete and assign a shiny material to the plane (it should resemble polished marble)
 PhongMaterial shiny = new PhongMaterial(new double[] { 0.05, 0.05, 0.05 }, 0.25, 0.25, 0.5, 128);
-pl.SetAttribute(PropertyName.MATERIAL, shiny);
+//pl.SetAttribute(PropertyName.MATERIAL, shiny);
 
-root.InsertChild(c, Matrix4d.Scale(4) * Matrix4d.CreateTranslation(0.0, 0.0, 2.4));
+root.InsertChild(c, Matrix4d.Scale(30, 2, 30) * Matrix4d.CreateTranslation(-10.0, 5, 20));
 root.InsertChild(pl, Matrix4d.RotateX(-MathHelper.PiOver2) * Matrix4d.CreateTranslation(0.0, 0.0, 0.0));
