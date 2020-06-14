@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using OpenTK;
+﻿using OpenTK;
 using Rendering;
 using System;
 using System.Collections.Generic;
@@ -15,14 +14,16 @@ namespace JaroslavNejedly
     IRayScene _scene;
     ISolid _volume;
 
+    double _coverage = 0.5;
+
     double _stepSize = 6.0 / 7.0;
     double _lightStepSize = 12.0 / 7.0;
 
-    double extinctionFactor = 4.0;
-    double scatteringFactor = 48.0;
+    double extinctionFactor = 1.0;
+    double scatteringFactor = 1.0;
 
-    int maxDepth = 18;
-    int maxLightDepth = 3;
+    int maxDepth = 36;
+    int maxLightDepth = 1;
 
     PerlinTexture pTex;
     VoronoiTexture vTex;
@@ -36,6 +37,7 @@ namespace JaroslavNejedly
 
       rf = (Intersection i, Vector3d dir, double importance, out RayRecursion rr) =>
       {
+        //TODO: compute intersections once more. Find the length in volume, set step sizes and step counts.
         if (i.Enter)
         {
           double extiction = 1.0;
@@ -58,26 +60,22 @@ namespace JaroslavNejedly
       };
     }
 
-    public double SampleDens (Vector3d pos)
+    public double SampleDens (Vector3d pos, double coverage = 0.5)
     {
+      //TODO: erode the edges
+      //TODO: soften transition from the edges
+      coverage = Math.Min(0.99, 1 - coverage);
       double voronoi = 1.0 - vTex.GetDistance3D(pos / 10);
-      double voronoiBig = 1.0 - vTex.GetDistance3D(pos / 50);
       double voronoiSmall = 1.0 - vTex.GetDistance3D(pos / 5);
 
       double perlin = pTex.Perlin3D(pos.X / 10, pos.Y / 10, pos.Z / 10, 1, 8);
-      double perlinBig = pTex.Perlin3D(pos.X / 50, pos.Z / 50, pos.Y / 50, 2, 4);
+      double perlinBig = pTex.Perlin3D(pos.X / 250, pos.Z / 250, pos.Y / 125, 2, 8);
       double perlinSmall = 1.0 - pTex.Perlin3D(pos.Z / 5, pos.X / 5, pos.Y / 5, 1, 8);
 
-      double altmod = Math.Max(0, -0.1 * pos.Y * pos.Y + pos.Y - 1.5);
+      double baseShape = Math.Max(0, 1 / (1 - coverage) * (perlinBig - coverage));
+      double worley = Math.Max(0, voronoi + voronoiSmall - 1.0);
 
-      double perl2D = pTex.Perlin2D(pos.X / 40, pos.Z / 40, 4, 12) - 0.1;
-      double latmod = Math.Max(0, perl2D);
-
-      double ret = (perlin * perlinSmall) * altmod * latmod;// * (voronoiSmall + voronoiBig) * 0.5 * (perlinBig + perlinSmall) * 0.5 * voronoi;
-
-      if (ret < 0 || ret > 1)
-        throw new ArgumentOutOfRangeException();
-      return ret;
+      return worley * baseShape;
     }
 
     public void RaymarchLight (Vector3d p0, Vector3d p1, ILightSource ls, ref double extinction, ref double[] scattering, int depth = 0)
@@ -96,17 +94,20 @@ namespace JaroslavNejedly
       }
 
       Vector3d newP0 = p0 + p1.Normalized() * _lightStepSize;
-      double dens = SampleDens(newP0);
+      double dens = SampleDens(newP0, _coverage);
 
       double scatteringCoef = scatteringFactor * dens;
       double extinctionCoef = extinctionFactor * dens;
 
+      //TODO: accumulate alpha
+      //TODO: exit early when alpha is 1.0
       extinction *= Math.Exp(-extinctionCoef * _stepSize);
 
       Intersection i = new Intersection(_volume);
       i.CoordWorld = newP0;
       i.Normal = p1.Normalized();
 
+      //TODO: better lighting and shading model
       double[] lightContrib = ls.GetIntensity(i, out Vector3d _);
 
       Util.ColorAdd(lightContrib, scatteringCoef * extinction * _lightStepSize, scattering);
@@ -143,7 +144,7 @@ namespace JaroslavNejedly
 
       //Direct sample
       Vector3d newP0 = p0 + p1.Normalized() * _stepSize;
-      double density = SampleDens(newP0);
+      double density = SampleDens(newP0, _coverage);
 
       double scatteringCoef = scatteringFactor * density;
       double extinctionCoef = extinctionFactor * density;
@@ -168,8 +169,10 @@ namespace JaroslavNejedly
         }
         //TODO: use raymarch light
         dir.Normalize();
-        double lightExtinction = extinction;
-        RaymarchLight(newP0, dir, ls, ref lightExtinction, ref scattering);
+
+        Util.ColorAdd(lightContrib, scatteringCoef * extinction * _stepSize, scattering);
+        //double lightExtinction = extinction;
+        //RaymarchLight(newP0, dir, ls, ref lightExtinction, ref scattering);
       }
 
       Raymarch(newP0, p1, ref extinction, ref scattering, depth + 1);

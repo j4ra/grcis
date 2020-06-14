@@ -41,5 +41,5 @@ c.SetAttribute(PropertyName.RECURSION, volClouds.rf);
 PhongMaterial shiny = new PhongMaterial(new double[] { 0.05, 0.05, 0.05 }, 0.25, 0.25, 0.5, 128);
 //pl.SetAttribute(PropertyName.MATERIAL, shiny);
 
-root.InsertChild(c, Matrix4d.Scale(35, 10, 30) * Matrix4d.CreateTranslation(-16, 5, 20));
+root.InsertChild(c, Matrix4d.Scale(100, 50, 100) * Matrix4d.CreateTranslation(-50, 10, -20));
 root.InsertChild(pl, Matrix4d.RotateX(-MathHelper.PiOver2) * Matrix4d.CreateTranslation(0.0, 0.0, 0.0));
