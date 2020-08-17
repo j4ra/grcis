@@ -33,6 +33,45 @@ namespace JaroslavNejedly
     }
   }
 
+  [Serializable]
+  public class SpotLight : ILightSource
+  {
+    Vector3d direction;
+    double[] intensity;
+    double angle;
+    
+    public SpotLight (Vector3d pos, double[] intensity, Vector3d direction, double angle = 20.0)
+    {
+      position = pos;
+      this.intensity = intensity;
+      this.direction = direction.Normalized();
+      this.angle = Math.Cos(angle * Math.PI / 180);
+    }
+
+    public SpotLight (Vector3d pos, double intensity, Vector3d direction, double angle = 20.0)
+    {
+      position = pos;
+      this.intensity = new double[] { intensity, intensity, intensity };
+      this.direction = direction.Normalized();
+      this.angle = Math.Cos(angle * Math.PI / 180);
+    }
+
+    public Vector3d? position { get; set; }
+
+    public virtual double[] GetIntensity (Intersection intersection, out Vector3d dir)
+    {
+      dir = (Vector3d)position - intersection.CoordWorld;
+
+      if (Vector3d.Dot(dir, intersection.Normal) <= 0.0)
+        return null;
+
+      if (Vector3d.Dot(dir.Normalized(), direction) <= angle)
+        return null;
+
+      return intensity;
+    }
+  }
+
 
   //TODO: animations
   [Serializable]
