@@ -1,0 +1,26 @@
+# Blender MTL File: 'talir.blend'
+# Material Count: 2
+
+newmtl base
+Ns 225.000000
+Ka 0.500000 0.500000 0.500000
+Kd 0.800000 0.800000 0.800000
+Ks 0.200000 0.200000 0.200000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+
+newmtl glass
+Ka 0.576471 0.647059 0.666667
+#the Ambient Color
+#[Red, green and blue values in the range [0 to 1.0] (entries larger than 1.0 will be divided by 256)]
+Kd 0.921569 0.945098 0.937255
+#the Diffuse Color
+Ks 1 1 1
+#the Specularity value
+illum 2
+#the self illumination (ambience) value...ommmmmmmmmmmmmmmm
+Ns 147.033
+#Shininess-Refraction value (multiplied by 0.128)
+d 0.21

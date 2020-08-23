@@ -4,6 +4,9 @@ using OpenTK;
 using MathSupport;
 using Utilities;
 
+
+using System.Linq;
+
 namespace Rendering
 {
   /// <summary>
@@ -242,15 +245,15 @@ namespace Rendering
 
       // If the ray is primary, increment both counters
       Statistics.IncrementRaysCounters(1, depth == 0);
-
       Intersection i = Intersection.FirstIntersection(intersections, ref p1);
 
       if (i == null)
-      {
+      { 
         // No intersection -> background color
         rayRegisterer?.RegisterRay(AbstractRayRegisterer.RayType.rayVisualizerNormal, depth, p0, direction * 100000);
 
-        return scene.Background.GetColor(p1, color);
+        long h = scene.Background.GetColor(p1, color);
+        return h + 144L * VolumetricPass(p0, p0 + p1 * 8, color);
       }
 
       // There was at least one intersection
@@ -377,6 +380,8 @@ namespace Rendering
       double   maxK;
       double   newImportance;
 
+      hash = hash + 144L * VolumetricPass(p0, i.CoordWorld, color);
+
       if (DoReflections)
       {
         // Shooting a reflected ray.
@@ -415,6 +420,60 @@ namespace Rendering
         Util.ColorAdd(comp, maxK, color);
       }
 
+      return hash;
+    }
+
+    int steps = 256;
+
+    private long VolumetricPass(Vector3d start, Vector3d stop, double[] color)
+    {
+      double[] scat = new double[] {0,0,0};
+      Vector3d dir = stop - start;
+      double step = Math.Min(dir.LengthFast, 8.0) / steps;
+
+      dir.NormalizeFast();
+
+      long h = Raymarch(start, dir, ref scat, out double scatW, step);
+
+      Util.ColorAdd(scat, scatW, color);
+
+      return h;
+    }
+
+    private int Raymarch (Vector3d p0, Vector3d p1, ref double[] scattering, out double scatteringWeight, double step)
+    {
+      int hash = 0;
+      Intersection inte = new Intersection(new Cube());
+
+      int totalSteps = 0;
+      for (int i = 1; i <= steps; i++)
+      {
+        totalSteps++;
+        Vector3d pos = p0 + p1 * step * i;
+        foreach (ILightSource ls in scene.Sources)
+        {
+          if (ls is AmbientLightSource)
+            continue;
+
+          inte.CoordWorld = pos;
+          ls.GetIntensity(inte, out Vector3d dir);
+          inte.Normal = dir;
+          double[] intensity = ls.GetIntensity(inte, out _);
+
+          if (intensity != null)
+          {
+            var intersections = scene.Intersectable.Intersect(pos, dir);
+            Intersection si = Intersection.FirstRealIntersection(intersections, ref dir);
+            if (si != null && !si.Far(1.0, ref dir))
+              continue;
+
+            Util.ColorAdd(intensity, scattering);
+            hash++;
+          }
+        }
+      }
+
+      scatteringWeight = 2.0 / totalSteps;
       return hash;
     }
   }

@@ -184,12 +184,17 @@
       <Link>WorkloadDistributionDummy.cs</Link>
     </Compile>
     <Compile Include="AdvancedBackground.cs" />
+    <Compile Include="AnimatedNodeTransform.cs" />
+    <Compile Include="AnimatedNodeTranslate.cs" />
+    <Compile Include="Animator.cs" />
+    <Compile Include="CatmullRomAnimator.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="KeyframesAnimatedStaticCamera.cs" />
     <Compile Include="ObjLoader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -551,7 +551,7 @@ namespace Rendering
             i.T * i.T * p1Squared > RAY_EPSILON2 &&
             i.Solid?.GetLocalAttribute(PropertyName.NO_SHADOW) == null)
           return i;
-
+      
       return null;
     }
 
